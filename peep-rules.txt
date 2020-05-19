@@ -8,7 +8,7 @@ replace {
  and	a, #0x0f
 } by {
  and	a, #0x10;2b 2c saved
- swap	a	
+ swap	a
 }
 
 replace {
@@ -201,4 +201,39 @@ replace {
  add a, a
  ld a, #0
  push	af
+}
+
+replace {
+ ld	%1, #%3
+ push	%1%2
+ inc	sp
+ ld	%1, #%3
+ push	%1%2
+ inc	sp
+ ld	%1, #%3
+ push	%1%2
+ inc	sp
+} by {
+ ld	%1, #%3 ; need this just once
+ push	%1%2
+ inc	sp
+ push	%1%2
+ inc	sp
+ push	%1%2
+ inc	sp
+}
+
+replace {
+ ld	%1, #%3
+ push	%1%2
+ inc	sp
+ ld	%1, #%3
+ push	%1%2
+ inc	sp
+} by {
+ ld	%1, #%3 ; need this just once
+ push	%1%2
+ inc	sp
+ push	%1%2
+ inc	sp
 }
