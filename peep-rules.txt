@@ -449,6 +449,15 @@ replace{
 }
 
 
+replace{
+ add %3, #%1
+ add %3, #%2
+} by {
+ ; dublicated add
+ add %3, #%1+%2
+}
+
+
 replace restart {
  ld	a,(hl)
  inc	a
