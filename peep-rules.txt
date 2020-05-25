@@ -150,6 +150,8 @@ replace {
 } if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1)
 
 
+
+
 replace {
  xor	a, a
  push	af
@@ -265,3 +267,115 @@ replace {
  push	af
  inc	sp
 } if immdInRange(1 1 'sub' %1 %2 %3)
+
+replace {
+ xor	a, a
+ push	af
+ inc	sp
+ ld	a, #0x01
+ push	af
+ inc	sp
+} by {
+ xor	a, a
+ push	af
+ inc	sp
+ inc	a
+ push	af
+ inc	sp
+}
+
+replace {
+ xor	a, a
+ push	af
+ inc	sp
+ ld	a, #0xff
+ push	af
+ inc	sp
+} by {
+ xor	a, a
+ push	af
+ inc	sp
+ dec	a
+ push	af
+ inc	sp
+}
+
+
+
+
+replace {
+ ld	hl, #%1
+ ld	a, (hl)
+ res	%2, a
+ ld	hl, #%1
+ ld	(hl), a
+} by {
+ ; Improve SHOW_BKG etc
+ ld	hl, #%1
+ res	%2, (hl)
+ ld	a, (hl)
+}
+
+replace {
+ ld	hl, #%1
+ ld	a, (hl)
+ set	%2, a
+ ld	hl, #%1
+ ld	(hl), a
+} by {	
+ ld	hl, #%1
+ set	%2, (hl)
+ ld	a, (hl)
+}
+
+replace {
+ set	%2, a
+ ld	hl, #%1
+} by {
+ ; just a helper for the following
+ ld	hl, #%1
+ set	%2, a
+}
+
+replace {
+ res	%2, a
+ ld	hl, #%1
+} by {
+ ld	hl, #%1
+ res	%2, a
+}
+
+replace {
+ ld	l, #0x%2
+ ld	a, (hl)
+ ld	hl, #0xff%2
+} by {
+ ld	l, #0x%2
+ ld	a, (hl)
+ ld	h, #0xff
+}
+
+
+
+
+replace {
+ ld	l, #%2
+ ld	(hl), #%1
+ ld	l, #%3
+} by {
+ ; for TMA_REG, TIMA_REG etc.
+ ld	l, #%2
+ ld	(hl), #%1
+ inc	l
+} if immdInRange(1 1 'sub' %3 %2 %4)
+
+replace {
+ ld	l, #%2
+ ld	(hl), #%1
+ ld	l, #%3
+} by {
+ ; for TMA_REG, TIMA_REG etc.
+ ld	l, #%2
+ ld	(hl), #%1
+ dec	l
+} if immdInRange(1 1 'sub' %2 %3 %4)
