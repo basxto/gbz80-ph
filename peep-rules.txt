@@ -47,6 +47,50 @@ replace {
 replace {
  ld	%1, (hl)
  dec	hl
+ ld	a, (hl%2)
+} by {
+ ; hack until notUsed is available
+ ld	a, (hl-);1b 2c
+ ld	%1, a	;1b 1c
+ ld	a, (hl%2)
+} if canAssign(%1 'a')
+
+replace {
+ ld	%1, (hl)
+ inc	hl
+ ld	a, (hl%2)
+} by {
+ ; hack until notUsed is available
+ ld	a, (hl+);1b 2c
+ ld	%1, a	;1b 1c
+ ld	a, (hl%2)
+} if canAssign(%1 'a')
+
+replace {
+ ld	(hl), %1
+ dec	hl
+ ld	a, (hl%2)
+} by {
+ ; hack until notUsed is available
+ ld	a, %1	;1b 1c
+ ld	(hl-),a;1b 2c
+ ld	a, (hl%2)
+} if canAssign('a' %1)
+
+replace {
+ ld	(hl), %1
+ inc	hl
+ ld	a, (hl%2)
+} by {
+ ; hack until notUsed is available
+ ld	a, %1	;1b 1c
+ ld	(hl+),a;1b 2c
+ ld	a, (hl%2)
+} if canAssign('a' %1)
+
+replace {
+ ld	%1, (hl)
+ dec	hl
 } by {
  ld	a, (hl-);1b 2c
  ld	%1, a	;1b 1c
@@ -379,3 +423,14 @@ replace {
  ld	(hl), #%1
  dec	l
 } if immdInRange(1 1 'sub' %2 %3 %4)
+
+
+replace{
+ xor	a, a
+ ld	(%1), a
+ ld	a, #0x01
+} by {
+ xor	a, a
+ ld	(%1), a
+ inc	a
+}
