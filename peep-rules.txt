@@ -723,5 +723,5 @@ replace restart {
 	ld	%2,%1
 } by {
 	ld	%1,%2
-	; z80 peephole 176 remove unnecessary load back
-} if notVolatile(%1), notVolatile(%2)
+	; modified z80 peephole 176 remove unnecessary load back
+} if notVolatile(%1), notVolatile(%2), notSame(%1 '(hl+)'), notSame(%1 '(hl-)'), notSame(%2 '(hl+)'), notSame(%2 '(hl-)')
