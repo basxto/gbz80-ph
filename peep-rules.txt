@@ -1,6 +1,49 @@
 // must be all in one file
 // more info https://sourceforge.net/p/sdcc/code/HEAD/tree/trunk/sdcc/src/SDCCpeeph.c
 
+replace restart {
+ ld	%1, h
+ ld	%2, l
+} by {
+ ; uniform order
+ ld	%2, l
+ ld	%1, h
+} if canAssign(%1%2 '#0x0001')
+
+replace restart {
+ ld	hl, #%1 + %2
+ dec	hl
+} by {
+ ; move dec to literal
+ ld	hl, #%1 + %3
+} if immdInRange(0 65535 'sub' %2 1 %3)
+
+replace restart {
+ ld	hl, #%1 - %2
+ dec	hl
+} by {
+ ; move dec to literal
+ ld	hl, #%1 - %3
+} if immdInRange(0 65535 'add' %2 1 %3)
+
+replace restart {
+ ld	hl, #%1 + %2
+ inc	hl
+} by {
+ ; move inc to literal
+ ld	hl, #%1 + %3
+} if immdInRange(0 65535 'add' %2 1 %3)
+
+replace restart {
+ ld	hl, #%1 - %2
+ inc	hl
+} by {
+ ; move inc to literal
+ ld	hl, #%1 - %3
+} if immdInRange(0 65535 'sub' %2 1 %3)
+
+
+
 replace {
  ; redundant AND
  and	a, #0x10
@@ -457,6 +500,19 @@ replace{
  add %3, #%1+%2
 }
 
+replace {
+ ld	%2, l
+ ld	%1, h
+ ld	a, (%1%2)
+ inc	a
+ ld	(%1%2), a
+} by {
+ ;
+ inc	(hl);1byte smaller 
+ ld	a, (hl)
+ ld	%2, l
+ ld	%1, h
+}
 
 replace restart {
  ld	a,(hl)
@@ -478,6 +534,7 @@ replace restart {
  ; modified z80 peephole 115 incremented in (hl) instead of going through a.
 }
 
+///////////////////////////////////////////////////////////////////////////////////
 // from sdcc z80:
 
 replace restart {
