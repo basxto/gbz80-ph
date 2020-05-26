@@ -514,6 +514,44 @@ replace {
  ld	%1, h
 }
 
+replace {
+ ldhl	sp, #%1
+ ld	a, (hl)
+ sub	a, #%2
+ jr	%3,%4
+ ldhl	sp, #%1
+ ld	a, (hl)
+ sub	a, #%5
+ jp	%6,%7
+} by {
+ ; no need to load sp twice
+ ldhl	sp, #%1
+ ld	a, (hl)
+ sub	a, #%2
+ jr	%3,%4
+ ld	a, (hl)
+ sub	a, #%5
+ jp	%6,%7
+}
+
+replace {
+ ldhl	sp, #%1
+ ld	a, (hl)
+ sub	a, #%2
+ jr	%3,%4
+ ld	a, (hl)
+ sub	a, #%5
+ jp	%6,%7
+} by {
+ ; we can reuse a safely
+ ldhl	sp, #%1
+ ld	a, (hl)
+ sub	a, #%2
+ jr	%3,%4
+ sub	a, #%8
+ jp	%6,%7
+} if immdInRange(0 255 'sub' %5 %2 %8)
+
 replace restart {
  ld	a,(hl)
  inc	a
