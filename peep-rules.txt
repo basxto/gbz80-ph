@@ -45,22 +45,40 @@ replace restart {
 
 
 replace {
- ; redundant AND
- and	a, #0x10
+ and	a, #%1
  swap	a
  and	a, #0x0f
 } by {
- and	a, #0x10;2b 2c saved
+ ; redundant AND
+ and	a, #%1;2b 2c saved
  swap	a
-}
+} if immdInRange(0x10 0xf0 'sub' 0xf0 %1 %2)
 
 replace {
  ; redundant AND
  and	a, #0x0f
- and	a, #0x01
+ and	a, #%1
 } by {
- and	a, #0x01;2b 2c saved
-}
+ and	a, #%1;2b 2c saved
+} if immdInRange(0 0x0f 'sub' 0x0f %1 %2)
+
+replace {
+ and	a, #%1
+ swap	a
+ and	a, #0xf0
+} by {
+ ; redundant AND
+ and	a, #%1;2b 2c saved
+ swap	a
+} if immdInRange(0 0x0f 'sub' 0x0f %1 %2)
+
+replace {
+ ; redundant AND
+ and	a, #0xf0
+ and	a, #%1
+} by {
+ and	a, #%1;2b 2c saved
+} if immdInRange(0x10 0xf0 'sub' 0xf0 %1 %2)
 
 
 
