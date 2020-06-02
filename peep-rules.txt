@@ -354,80 +354,79 @@ replace {
 }
 
 replace {
- ld	a, #0x%1
- push	af
+ ld	%1, #0x%3
+ push	%1%2
  inc	sp
- push	af
+ push	%1%2
  inc	sp
 } by {
  ; load via 16bit reg
- ld bc, #0x%1%1
+ ld bc, #0x%3%3
  push	bc
-} if notUsed('b'), notUsed('c'), notUsed('a')
+} if notUsed('b'), notUsed('c'), notUsed(%1)
 
 replace {
- ld	a, #0x%1
- push	af
+ ld	%1, #0x%5
+ push	%1%2
  inc	sp
- ld	a, #0x%2
- push	af
+ ld	%3, #0x%6
+ push	%3%4
  inc	sp
 } by {
  ; load via 16bit reg
- ld bc, #0x%1%2
+ ld bc, #0x%5%6
  push	bc
-} if notUsed('b'), notUsed('c'), notUsed('a')
+} if notUsed('b'), notUsed('c'), notUsed(%1), notUsed(%3)
 
 replace {
- ld	a, #0x%1
- push	af
+ ld	%1, #0x%3
+ push	%1%2
  inc	sp
- push	af
+ push	%1%2
  inc	sp
 } by {
  ; load via 16bit reg
- ld de, #0x%1%1
+ ld de, #0x%3%3
  push	de
-} if notUsed('d'), notUsed('e'), notUsed('a')
+} if notUsed('d'), notUsed('e'), notUsed(%1)
 
 replace {
- ld	a, #0x%1
- push	af
+ ld	%1, #0x%5
+ push	%1%2
  inc	sp
- ld	a, #0x%2
- push	af
+ ld	%3, #0x%6
+ push	%3%4
  inc	sp
 } by {
  ; load via 16bit reg
- ld de, #0x%1%2
+ ld de, #0x%5%6
  push	de
-} if notUsed('d'), notUsed('e'), notUsed('a')
-
+} if notUsed('d'), notUsed('e'), notUsed(%1), notUsed(%3)
 
 replace {
- ld	a, #0x%1
- push	af
+ ld	%1, #0x%3
+ push	%1%2
  inc	sp
- push	af
+ push	%1%2
  inc	sp
 } by {
  ; load via 16bit reg
- ld hl, #0x%1%1
+ ld hl, #0x%3%3
  push	hl
-} if notUsed('h'), notUsed('l'), notUsed('a')
+} if notUsed('h'), notUsed('l'), notUsed(%1)
 
 replace {
- ld	a, #0x%1
- push	af
+ ld	%1, #0x%5
+ push	%1%2
  inc	sp
- ld	a, #0x%2
- push	af
+ ld	%3, #0x%6
+ push	%3%4
  inc	sp
 } by {
  ; load via 16bit reg
- ld hl, #0x%1%2
+ ld hl, #0x%5%6
  push	hl
-} if notUsed('h'), notUsed('l'), notUsed('a')
+} if notUsed('h'), notUsed('l'), notUsed(%1), notUsed(%3)
 
 replace {
  xor	a, a
@@ -700,6 +699,18 @@ replace {
 } by {
  ; remove unused a register writes
 } if notUsed('a'), notSame(%2 '(hl+)'), notSame(%2 '(hl-)')
+
+replace {
+ dec	hl
+ ld	a, (hl+)
+ ld	h, (hl)
+ ld	l, a
+} by {
+ ; save one dec
+ ld	a, (hl-)
+ ld	l, (hl)
+ ld	h, a
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////
