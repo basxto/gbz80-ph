@@ -458,6 +458,22 @@ replace {
 } if notUsed('b'), notUsed('c')
 
 replace {
+ ld	a, (hl)
+ push	af
+ inc	sp
+ dec	hl
+ ld	a, (hl)
+ push	af
+ inc	sp
+} by {
+ ; improved push from ram
+ ld	a, (hl-)
+ ld	b, a
+ ld	c, (hl)
+ push	bc
+} if notUsed('b'), notUsed('c'), notUsed('a')
+
+replace {
  ld	a, #%1
  push	af
  inc	sp
@@ -711,6 +727,72 @@ replace {
  ld	h, a
 }
 
+replace {
+ ld	(hl), a
+ ld	l, (hl)
+} by {
+ ; saves one cycle
+ ld	(hl), a
+ ld	l, a
+}
+
+// 6b 7c vs 5b 6c
+replace{
+ ld	l, a
+ ld	h, #0x00
+ add	hl, %1%2
+ ld	%2, l
+ ld	%1, h
+} by {
+ ; improved 8bit and 16bit addition
+ add	a, %2
+ ld	%2, a
+ adc	a, %1
+ sub	a, %2
+ ld	%1, a
+} if notUsed('a'), notUsed('h'), notUsed('l')
+
+// 7b 9c vs 7b 8c
+replace{
+ ld	%1, (hl)
+ ld	hl, #0x00%3
+ add	hl, %1%2
+ ld	%2, l
+ ld	%1, h
+} by {
+ ; improved 8bit and 16bit addition
+ ld	a, %2
+ add	a, #0x%3
+ ld	%2, a
+ adc	a, (hl)
+ sub	a, %2
+ ld	%1, a
+} if notUsed('a'), notUsed('h'), notUsed('l')
+
+//!! increases size
+// 5b 9c vs 7b 7c
+replace{
+ ld	b, %1
+ inc	bc
+ inc	bc
+ inc	bc
+ inc	bc
+} by {
+ ; 16bit +4
+ ld	a, c
+ add	a, #0x04
+ ld	c, a
+ adc	a, %1
+ sub	c
+ ld	b, a
+} if notUsed('a'), notSame(%1 'a'), notSame(%1 'c')
+
+replace{
+ ld	%2, %1
+ ld	%3, %2
+} by {
+ ld	%3, %1
+} if notUsed(%2), canAssign(%3 %1)
 
 ///////////////////////////////////////////////////////////////////////////////////
 // from sdcc z80:
