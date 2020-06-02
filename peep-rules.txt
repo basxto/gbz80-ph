@@ -45,14 +45,13 @@ replace restart {
 
 
 replace {
- and	a, #%1
+ and	a, #0x%1%2
  swap	a
- and	a, #0x0f
 } by {
- ; redundant AND
- and	a, #%1;2b 2c saved
+ ; swap and and swap
  swap	a
-} if immdInRange(0x10 0xf0 'sub' 0xf0 %1 %2)
+ and	a, #0x%2%1
+}
 
 replace {
  ; redundant AND
