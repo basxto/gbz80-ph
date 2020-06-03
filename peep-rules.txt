@@ -58,7 +58,8 @@ replace {
  and	a, #0x0f
  and	a, #%1
 } by {
- and	a, #%1;2b 2c saved
+ ;2b 2c saved
+ and	a, #%1
 } if immdInRange(0 0x0f 'sub' 0x0f %1 %2)
 
 replace {
@@ -67,7 +68,8 @@ replace {
  and	a, #0xf0
 } by {
  ; redundant AND
- and	a, #%1;2b 2c saved
+ ;2b 2c saved
+ and	a, #%1
  swap	a
 } if immdInRange(0 0x0f 'sub' 0x0f %1 %2)
 
@@ -76,32 +78,34 @@ replace {
  and	a, #0xf0
  and	a, #%1
 } by {
- and	a, #%1;2b 2c saved
+ ;2b 2c saved
+ and	a, #%1
 } if immdInRange(0x10 0xf0 'sub' 0xf0 %1 %2)
 
 
 
 replace {
- ; ld	a, (hl+/-) is faster
  ld	%2, (hl)
  inc	hl
  ld	%1, (hl)
  dec	%1%2
  dec	hl
 } by {
- ld	a, (hl+);1b 2c
- ld	%2, a	;1b 1c
- ld	a, (hl-);1b 2c
- ld	%1, a	;1b 1c
- dec	%1%2	;1b 2c
+ ; ld	a, (hl+/-) is faster
+ ld	a, (hl+)
+ ld	%2, a
+ ld	a, (hl-)
+ ld	%1, a
+ dec	%1%2
 } if canAssign(%2 'a'), canAssign(%1 'a'), notUsed('a')
 
 replace {
- ; ld	a, (hl+/-) is faster
  ld	a, (hl)
  dec	hl
 } by {
- ld	a, (hl-);save 1b 2c
+ ; ld	a, (hl+/-) is faster
+ ;save 1b 2c
+ ld	a, (hl-)
 }
 
 replace {
@@ -110,8 +114,8 @@ replace {
  ld	a, (hl%2)
 } by {
  ; hack until notUsed is available
- ld	a, (hl-);1b 2c
- ld	%1, a	;1b 1c
+ ld	a, (hl-)
+ ld	%1, a
  ld	a, (hl%2)
 } if canAssign(%1 'a')
 
@@ -121,8 +125,8 @@ replace {
  ld	a, (hl%2)
 } by {
  ; hack until notUsed is available
- ld	a, (hl+);1b 2c
- ld	%1, a	;1b 1c
+ ld	a, (hl+)
+ ld	%1, a
  ld	a, (hl%2)
 } if canAssign(%1 'a')
 
@@ -132,8 +136,8 @@ replace {
  ld	a, (hl%2)
 } by {
  ; hack until notUsed is available
- ld	a, %1	;1b 1c
- ld	(hl-),a;1b 2c
+ ld	a, %1
+ ld	(hl-),a
  ld	a, (hl%2)
 } if canAssign('a' %1)
 
@@ -143,8 +147,8 @@ replace {
  ld	a, (hl%2)
 } by {
  ; hack until notUsed is available
- ld	a, %1	;1b 1c
- ld	(hl+),a;1b 2c
+ ld	a, %1
+ ld	(hl+),a
  ld	a, (hl%2)
 } if canAssign('a' %1)
 
@@ -152,23 +156,26 @@ replace {
  ld	%1, (hl)
  dec	hl
 } by {
- ld	a, (hl-);1b 2c
- ld	%1, a	;1b 1c
+ ; ld	a, (hl+/-) is faster
+ ld	a, (hl-)
+ ld	%1, a
 } if canAssign(%1 'a'), notUsed('a')
 
 replace {
  ld	a, (hl)
  inc	hl
 } by {
- ld	a, (hl+);save 1b 2c
+ ;save 1b 2c
+ ld	a, (hl+)
 }
 
 replace {
  ld	%1, (hl)
  inc	hl
 } by {
- ld	a, (hl+);1b 2c
- ld	%1, a	;1b 1c
+ ; ld	a, (hl+/-) is faster
+ ld	a, (hl+)
+ ld	%1, a
 } if canAssign(%1 'a'), notUsed('a')
 
 replace {
@@ -176,30 +183,34 @@ replace {
  ld	(hl), a
  dec	hl
 } by {
- ld	(hl-), a;save 1b 2c
+ ;save 1b 2c
+ ld	(hl-), a
 }
 
 replace {
  ld	(hl), %1
  dec	hl
 } by {
- ld	a, %1	;1b 1c
- ld	(hl-), a;1b 2c
+ ; ld	a, (hl+/-) is faster
+ ld	a, %1
+ ld	(hl-), a
 } if canAssign('a' %1), notUsed('a')
 
 replace {
  ld	(hl), a
  inc	hl
 } by {
- ld	(hl+), a;save 1b 2c
+ ;save 1b 2c
+ ld	(hl+), a
 }
 
 replace {
  ld	(hl), %1
  inc	hl
 } by {
- ld	a, %1	;1b 1c
- ld	(hl+), a;1b 2c
+ ; ld	a, (hl+/-) is faster
+ ld	a, %1
+ ld	(hl+), a
 } if canAssign('a' %1), notUsed('a')
 
 
@@ -217,7 +228,8 @@ replace {
  sla  %1
  rl   %2
 } by {
- ld   a, (hl)	; no backup needed
+ ; no backup needed
+ ld   a, (hl)
  swap a
  ld   %1, a
  and  a, #0x0f
@@ -239,7 +251,8 @@ replace {
  sla  %1
  rl   %2
 } by {
- push af ; backup
+ ; backup
+ push af 
  ld   a, (hl)
  swap a
  ld   %1, a
@@ -248,7 +261,8 @@ replace {
  ld   a, %1
  and  a, #0xf0
  ld   %1, a
- pop  af ; restore
+ ; restore
+ pop  af
 } if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1)
 
 
@@ -298,9 +312,12 @@ replace {
  inc	sp
 } by {
  ; even faster than ld bc, #0
- xor	a, a	; 1b 1c ; a=0
- rra		; 1b 1c ; f=0
- push	af	; 3b 8c saved
+ ; 3b 8c saved
+ ; a=0
+ xor	a, a
+ ; f=0
+ rra
+ push	af
 }
 
 replace {
@@ -312,8 +329,10 @@ replace {
  inc	sp
 } by {
  ; no idea if somebody needs this
- xor	a, a	; 1b 1c ; a=0 f=0x80
- push	af	; 5b 9c saved
+ ; 5b 9c saved
+ ; a=0 f=0x80
+ xor	a, a
+ push	af
 }
 
 replace {
@@ -484,7 +503,8 @@ replace {
  ld	a, #%1
  push	af
  inc	sp
- inc	a ; previous paramater
+ ; previous parameter
+ inc	a
  push	af
  inc	sp
 } if immdInRange(1 1 'sub' %2 %1 %3)
@@ -500,7 +520,8 @@ replace {
  ld	a, #%1
  push	af
  inc	sp
- dec	a ; previous paramater
+ ; previous parameter
+ dec	a
  push	af
  inc	sp
 } if immdInRange(1 1 'sub' %1 %2 %3)
@@ -516,6 +537,7 @@ replace {
  xor	a, a
  push	af
  inc	sp
+ ; ld	a, #0x01
  inc	a
  push	af
  inc	sp
@@ -532,6 +554,7 @@ replace {
  xor	a, a
  push	af
  inc	sp
+ ; ld	a, #0xff
  dec	a
  push	af
  inc	sp
@@ -644,8 +667,8 @@ replace {
  inc	a
  ld	(%1%2), a
 } by {
- ;
- inc	(hl);1byte smaller 
+ ; 1byte smaller 
+ inc	(hl)
  ld	a, (hl)
  ld	%2, l
  ld	%1, h
@@ -708,12 +731,6 @@ replace restart {
  ld	a,(hl)
  ; modified z80 peephole 115 incremented in (hl) instead of going through a.
 }
-
-replace {
- ld a, %2
-} by {
- ; remove unused a register writes
-} if notUsed('a'), notSame(%2 '(hl+)'), notSame(%2 '(hl-)')
 
 replace {
  dec	hl
@@ -788,11 +805,52 @@ replace{
 } if notUsed('a'), notSame(%1 'a'), notSame(%1 'c')
 
 replace{
+ ld	a, #0x%3
+ push	af
+ inc	sp
+ push	%1%2
+ inc	sp
+} by {
+ ld %2, %1
+ ld	%1, #0x%3
+ push	%1%2
+} if notUsed('a'), notUsed(%1), notUsed(%2), canAssign(%2 %1)
+
+replace{
+ ld	a, #0x%3
+ push	af
+ inc	sp
+ push	%1%2
+ inc	sp
+} by {
+ ld	h, #0x%3
+ ld l, %1
+ push	hl
+} if notUsed('a'), notUsed('h'), notUsed('l'), canAssign('l' %1)
+
+replace{
+ ld	a, (hl+)
+ ld	%1, a
+ ld	%2, (hl)
+ ld	a, %1
+} by {
+ ld	a, (hl+)
+ ld	%1, a
+ ld	%2, (hl)
+} if notSame(%2 'a'), notSame(%1 %2)
+
+replace restart{
  ld	%2, %1
  ld	%3, %2
 } by {
  ld	%3, %1
-} if notUsed(%2), canAssign(%3 %1)
+} if notUsed(%2), canAssign(%3 %1), notSame(%2 '(hl+)'), notSame(%2 '(hl-)')
+
+replace {
+ ld %1, %2
+} by {
+ ; remove unused a register writes
+} if notUsed(%1), notSame(%2 '(hl+)'), notSame(%2 '(hl-)'), notSame(%1 '(hl+)'), notSame(%1 '(hl-)')
 
 ///////////////////////////////////////////////////////////////////////////////////
 // from sdcc z80:
