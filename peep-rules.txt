@@ -69,26 +69,6 @@ replace {
  and	a, #%1
 } if immdInRange(0 0x0f 'sub' 0x0f %1 %2)
 
-replace {
- and	a, #%1
- swap	a
- and	a, #0xf0
-} by {
- ; redundant AND
- ;2b 2c saved
- and	a, #%1
- swap	a
-} if immdInRange(0 0x0f 'sub' 0x0f %1 %2)
-
-replace {
- ; redundant AND
- and	a, #0xf0
- and	a, #%1
-} by {
- ;2b 2c saved
- and	a, #%1
-} if immdInRange(0x10 0xf0 'sub' 0xf0 %1 %2)
-
 
 
 replace {
