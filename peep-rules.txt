@@ -1,14 +1,21 @@
 // must be all in one file
 // more info https://sourceforge.net/p/sdcc/code/HEAD/tree/trunk/sdcc/src/SDCCpeeph.c
 
+replace {
+ xor	a, a
+} by {
+ ; xor a to ld for better optmizations
+ ld	a, #0x00
+} if notUsed('f')
+
 replace restart {
- ld	%1, h
- ld	%2, l
+ ld	%1, %3
+ ld	%2, %4
 } by {
  ; uniform order
- ld	%2, l
- ld	%1, h
-} if canAssign(%1%2 '#0x0001')
+ ld	%2, %3
+ ld	%1, %4
+} if canAssign(%1%2 '#0x0001'), notSame(%1, %4)
 
 replace restart {
  ld	hl, #%1 + %2
@@ -281,59 +288,48 @@ replace restart {
 }
 // %2 can't be f
 
+// %1 and %3 must be single registers
 replace {
- xor	a, a
- push	af
+ ld	%1, %5
+ push	%1%2
  inc	sp
- xor	a, a
- push	af
- inc	sp
- xor	a, a
- push	af
+ ld	%3, %6
+ push	%3%4
  inc	sp
 } by {
- ; three 0 arguments
- xor	a, a
- push	af
- inc	sp
- xor	a, a
- push	af
- inc	sp
- push	af
- inc	sp
-}
+ ; load via 16bit reg
+ ld c, %6
+ ld b, %5
+ push	bc
+} if notUsed('b'), notUsed('c'), canAssign(%1 'b'), canAssign(%3 'b'), notUsed(%1), notUsed(%3), notSame(%5 'b' 'c' '(ld+)' '(ld-)'), notSame(%6 'b' 'c' '(ld+)' '(ld-)')
 
 replace {
- xor	a, a
- push	af
+ ld	%1, %5
+ push	%1%2
  inc	sp
- xor	a, a
- push	af
+ ld	%3, %6
+ push	%3%4
  inc	sp
 } by {
- ; even faster than ld bc, #0
- ; 3b 8c saved
- ; a=0
- xor	a, a
- ; f=0
- rra
- push	af
-}
+ ; load via 16bit reg
+ ld e, %6
+ ld d, %5
+ push	de
+} if notUsed('d'), notUsed('e'), canAssign(%1 'b'), canAssign(%3 'b'), notUsed(%1), notUsed(%3), notSame(%5 'd' 'e' '(ld+)' '(ld-)'), notSame(%6 'd' 'e' '(ld+)' '(ld-)')
 
 replace {
- xor	a, a
- push	af
+ ld	%1, %5
+ push	%1%2
  inc	sp
- ld	a, #0x80
- push	af
+ ld	%3, %6
+ push	%3%4
  inc	sp
 } by {
- ; no idea if somebody needs this
- ; 5b 9c saved
- ; a=0 f=0x80
- xor	a, a
- push	af
-}
+ ; load via 16bit reg
+ ld l, %6
+ ld h, %5
+ push	hl
+} if notUsed('h'), notUsed('l'), canAssign(%1 'b'), canAssign(%3 'b'), notUsed(%1), notUsed(%3), notSame(%5 'h' 'l' '(ld+)' '(ld-)'), notSame(%6 'h' 'l' '(ld+)' '(ld-)')
 
 replace {
  ld	%1, #%3
@@ -370,111 +366,6 @@ replace {
  push	%1%2
  inc	sp
 }
-
-replace {
- ld	%1, #0x%3
- push	%1%2
- inc	sp
- push	%1%2
- inc	sp
-} by {
- ; load via 16bit reg
- ld bc, #0x%3%3
- push	bc
-} if notUsed('b'), notUsed('c'), notUsed(%1)
-
-replace {
- ld	%1, #0x%5
- push	%1%2
- inc	sp
- ld	%3, #0x%6
- push	%3%4
- inc	sp
-} by {
- ; load via 16bit reg
- ld bc, #0x%5%6
- push	bc
-} if notUsed('b'), notUsed('c'), notUsed(%1), notUsed(%3)
-
-replace {
- ld	%1, #0x%3
- push	%1%2
- inc	sp
- push	%1%2
- inc	sp
-} by {
- ; load via 16bit reg
- ld de, #0x%3%3
- push	de
-} if notUsed('d'), notUsed('e'), notUsed(%1)
-
-replace {
- ld	%1, #0x%5
- push	%1%2
- inc	sp
- ld	%3, #0x%6
- push	%3%4
- inc	sp
-} by {
- ; load via 16bit reg
- ld de, #0x%5%6
- push	de
-} if notUsed('d'), notUsed('e'), notUsed(%1), notUsed(%3)
-
-replace {
- ld	%1, #0x%3
- push	%1%2
- inc	sp
- push	%1%2
- inc	sp
-} by {
- ; load via 16bit reg
- ld hl, #0x%3%3
- push	hl
-} if notUsed('h'), notUsed('l'), notUsed(%1)
-
-replace {
- ld	%1, #0x%5
- push	%1%2
- inc	sp
- ld	%3, #0x%6
- push	%3%4
- inc	sp
-} by {
- ; load via 16bit reg
- ld hl, #0x%5%6
- push	hl
-} if notUsed('h'), notUsed('l'), notUsed(%1), notUsed(%3)
-
-replace {
- xor	a, a
- push	af
- inc	sp
- ld	a, #0x%1
- push	af
- inc	sp
-} by {
- ; load via 16bit reg
- xor	a, a
- ld	b, a
- ld c, #0x%1
- push	bc
-} if notUsed('b'), notUsed('c'), notUsed('a')
-
-replace {
- ld	a, #0x%1
- push	af
- inc	sp
- xor	a, a
- push	af
- inc	sp
-} by {
- ; load via 16bit reg
- xor	a, a
- ld	c, a
- ld b, #0x%1
- push	bc
-} if notUsed('b'), notUsed('c')
 
 replace {
  ld	a, (hl)
@@ -875,6 +766,54 @@ replace{
 
 // those should come as late as possible
 
+replace {
+ ld	%2, #0x%4
+ ld	%1, #0x%3
+} by {
+ ; 2x8bit to 16bit write
+ ld	%1%2, #0x%3%4
+} if canAssign(%1%2 '#0x0201')
+
+// improve the above
+replace {
+ ld	%1%2, #0x0000
+ push	%1%2
+} by {
+ ; even faster than ld bc, #0
+ ; a=0
+ xor	a, a
+ ; f=0
+ rra
+ push	af
+} if notUsed('a'), notUsed(%1), notUsed(%2)
+
+replace {
+ ld	%1%2, #0x0080
+ push	%1%2
+} by {
+ ; no idea if somebody needs this
+ ; a=0 f=0x80
+ xor	a, a
+ push	af
+} if notUsed('a'), notUsed(%1), notUsed(%2)
+
+replace {
+ ld	%1%2,#0x0000
+ push	%1%2
+ push	af
+ inc	sp
+} by {
+ ld %1, a
+ ; even faster than ld bc, #0
+ ; a=0
+ xor	a, a
+ ; f=0
+ rra
+ push	af
+ push	bc
+ inc	sp
+} if notUsed('a'), notUsed(%1), notUsed(%2)
+
 replace restart{
  ld	%1, %2
  ld	%3, (hl)
@@ -1155,3 +1094,11 @@ replace restart {
 	ld	%1,%2
 	; modified z80 peephole 176 remove unnecessary load back
 } if notVolatile(%1), notVolatile(%2), notSame(%1 '(hl+)'), notSame(%1 '(hl-)'), notSame(%2 '(hl+)'), notSame(%2 '(hl-)')
+
+
+replace {
+ ld	a, #0x00
+} by {
+ ; restore xor a
+ xor	a, a
+} if notUsed('f')
