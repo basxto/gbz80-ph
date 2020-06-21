@@ -839,9 +839,10 @@ replace {
  ld	%3, %4
  ld	%2, %1
 } by {
- ; removed not need loads
+ ; removed not need load
+ ld	%1, %2
  ld	%3, %4
-} if notUsed(%1), notVolatile(%1), notSame(%1 %3 %4), notSame(%2 %3 %4), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)')
+} if notVolatile(%1), notSame(%1 %3), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)')
 
 // those should come as late as possible
 
