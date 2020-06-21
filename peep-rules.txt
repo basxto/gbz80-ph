@@ -770,6 +770,79 @@ replace {
  inc	%1%2
 } if notSame(%1 '(hl)' '(hl-)' '(hl+)' 'a')
 
+// especially needed by SHOW_BKG etc
+replace {
+ ldh	a, (%1)
+ or	a, #%2
+ ldh	(%1), a
+ ldh	a, (%1)
+ or	a, #%3
+ ldh	(%1), a
+} by {
+ ; switched to ldh (c)
+ ld	c, #<(%1)
+ ldh	a, (c)
+ or	a, #%2
+ ldh	(c), a
+ ldh	a, (c)
+ or	a, #%3
+ ldh	(c), a ; c is #<(%1)
+} if notUsed('c'), notSame(%1 'c')
+
+replace {
+ ldh	(c), a ; c is #<(%1)
+ ldh	a, (%1)
+ or	a, #%2
+ ldh	(%1), a
+} by {
+ ; switched to ldh (c)
+ ldh	(c), a
+ ldh	a, (c)
+ or	a, #%2
+ ldh	(c), a ; c is #<(%1)
+} if notSame(%1 'c')
+
+// especially needed by HIDE_BKG etc
+replace {
+ ldh	a, (%1)
+ and	a, #%2
+ ldh	(%1), a
+ ldh	a, (%1)
+ and	a, #%3
+ ldh	(%1), a
+} by {
+ ; switched to ldh (c)
+ ld	c, #<(%1)
+ ldh	a, (c)
+ and	a, #%2
+ ldh	(c), a
+ ldh	a, (c)
+ and	a, #%3
+ ldh	(c), a ; c is #<(%1)
+} if notUsed('c'), notSame(%1 'c')
+
+replace {
+ ldh	(c), a ; c is #<(%1)
+ ldh	a, (%1)
+ and	a, #%2
+ ldh	(%1), a
+} by {
+ ; switched to ldh (c)
+ ldh	(c), a
+ ldh	a, (c)
+ and	a, #%2
+ ldh	(c), a ; c is #<(%1)
+} if notSame(%1 'c')
+
+replace {
+ ld	%1, %2
+ ld	%3, %4
+ ld	%2, %1
+} by {
+ ; removed not need loads
+ ld	%3, %4
+} if notUsed(%1), notVolatile(%1), notSame(%1 %3 %4), notSame(%2 %3 %4), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)')
+
 // those should come as late as possible
 
 replace {
