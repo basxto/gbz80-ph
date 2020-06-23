@@ -23,7 +23,7 @@ replace restart {
 } by {
  ; move dec to literal
  ld	hl, #%1 + %3
-} if immdInRange(0 65535 'sub' %2 1 %3)
+} if immdInRange(0 65535 '-' %2 1 %3)
 
 replace restart {
  ld	hl, #%1 - %2
@@ -31,7 +31,7 @@ replace restart {
 } by {
  ; move dec to literal
  ld	hl, #%1 - %3
-} if immdInRange(0 65535 'add' %2 1 %3)
+} if immdInRange(0 65535 '-' %2 1 %3)
 
 replace restart {
  ld	hl, #%1 + %2
@@ -39,7 +39,7 @@ replace restart {
 } by {
  ; move inc to literal
  ld	hl, #%1 + %3
-} if immdInRange(0 65535 'add' %2 1 %3)
+} if immdInRange(0 65535 '-' %2 1 %3)
 
 replace restart {
  ld	hl, #%1 - %2
@@ -47,27 +47,25 @@ replace restart {
 } by {
  ; move inc to literal
  ld	hl, #%1 - %3
-} if immdInRange(0 65535 'sub' %2 1 %3)
+} if immdInRange(0 65535 '-' %2 1 %3)
 
 
 
 replace {
- and	a, #0x%1%2
- swap	a
+ and	a, #%1
+ and	a, #%2
 } by {
- ; swap and and swap
- swap	a
- and	a, #0x%2%1
-}
+ ; remove redundant and
+ and	a, #%3
+} if immdInRange(0x0 0xff '&' %1 %2 %x3)
 
 replace {
- ; redundant AND
- and	a, #0x0f
- and	a, #%1
+ or	a, #%1
+ or	a, #%2
 } by {
- ;2b 2c saved
- and	a, #%1
-} if immdInRange(0 0x0f 'sub' 0x0f %1 %2)
+ ; remove redundant or
+ or	a, #%3
+} if immdInRange(0x0 0xff '|' %1 %2 %x3)
 
 
 
@@ -378,7 +376,7 @@ replace {
  inc	a
  push	af
  inc	sp
-} if immdInRange(1 1 'sub' %2 %1 %3)
+} if immdInRange(1 1 '-' %2 %1 %3)
 
 replace {
  ld	a, #%1
@@ -395,7 +393,7 @@ replace {
  dec	a
  push	af
  inc	sp
-} if immdInRange(1 1 'sub' %1 %2 %3)
+} if immdInRange(1 1 '-' %1 %2 %3)
 
 replace {
  xor	a, a
@@ -498,7 +496,7 @@ replace {
  ld	l, #%2
  ld	(hl), #%1
  inc	l
-} if immdInRange(1 1 'sub' %3 %2 %4)
+} if immdInRange(1 1 '-' %3 %2 %4)
 
 replace {
  ld	l, #%2
@@ -509,7 +507,7 @@ replace {
  ld	l, #%2
  ld	(hl), #%1
  dec	l
-} if immdInRange(1 1 'sub' %2 %3 %4)
+} if immdInRange(1 1 '-' %2 %3 %4)
 
 
 replace{
@@ -581,7 +579,7 @@ replace {
  jr	%3,%4
  sub	a, #%8
  jp	%6,%7
-} if immdInRange(0 255 'sub' %5 %2 %8)
+} if immdInRange(0 255 '-' %5 %2 %8)
 
 replace restart {
  ld	a,(hl)
