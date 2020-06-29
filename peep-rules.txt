@@ -310,6 +310,183 @@ replace {
 } if notUsed('h'), notUsed('l'), canAssign(%1 'b'), canAssign(%3 'b'), notUsed(%1), notUsed(%3), notSame(%5 'h' 'l' '(ld+)' '(ld-)'), notSame(%6 'h' 'l' '(ld+)' '(ld-)')
 
 replace {
+ xor	a, a
+ push	af
+ inc	sp
+ ld	a, #%1
+ push	af
+ inc	sp
+} by {
+ ld	bc, #%1
+ push bc
+} if notUsed('bc'), notUsed('a'), notUsed('f')
+
+replace {
+ xor	a, a
+ push	af
+ inc	sp
+ ld	a, #%1
+ push	af
+ inc	sp
+} by {
+ ld	hl, #%1
+ push hl
+} if notUsed('hl'), notUsed('a'), notUsed('f')
+
+
+replace {
+ xor	a, a
+ push	af
+ inc	sp
+ ld	a, #%1
+ push	af
+ inc	sp
+} by {
+ ld	de, #%1
+ push de
+} if notUsed('de'), notUsed('a'), notUsed('f')
+
+replace {
+ xor	a, a
+ push	af
+ inc	sp
+ ld	a, #%1
+ push	af
+ inc	sp
+} by {
+ xor	a, a
+ ld	bc, #%1
+ push bc
+ ld	a, c
+} if notUsed('bc')
+
+replace {
+ ld	a, #0x%1
+ push	af
+ inc	sp
+ xor	a, a
+ push	af
+ inc	sp
+} by {
+ xor	a, a
+ ld	bc, #0x%1%2%2
+ push bc
+} if notUsed('bc'), immdInRange(0 65536 '+' 0 0 %2)
+
+
+
+replace {
+ push	%1%2
+ inc	sp
+ push	%3%4
+ inc	sp
+} by {
+ ; load from everything through %1%2
+ ld	%2, %3
+ push	%1%2
+} if notUsed(%2)
+
+replace {
+ push	%1%2
+ inc	sp
+ push	%3%4
+ inc	sp
+} by {
+ ; load from everything through bc
+ ld	b, 1%
+ ld	c, 3%
+ push	bc
+} if notUsed('bc'), notSame('b' %3)
+
+replace {
+ push	%1%2
+ inc	sp
+ push	%3%4
+ inc	sp
+} by {
+ ; load from everything through de
+ ld	d, 1%
+ ld	e, 3%
+ push	de
+} if notUsed('de'), notSame('d' %3)
+
+replace {
+ ld	%1, (hl)
+ push	%1%2
+ inc	sp
+ ld	hl, #%5
+ ld	%3, (hl)
+ push	%3%4
+ inc	sp
+} by {
+ ; load from (hl) to bc
+ ld	b, (hl)
+ ld	hl, #%5
+ ld	c, (hl)
+ push	bc
+} if notUsed(%1), notUsed(%3), notUsed('bc')
+
+replace {
+ ld	%1, (hl)
+ push	%1%2
+ inc	sp
+ ld	hl, #%5
+ ld	%3, (hl)
+ push	%3%4
+ inc	sp
+} by {
+ ; load from (hl) to de
+ ld	d, (hl)
+ ld	hl, #%5
+ ld	e, (hl)
+ push	de
+} if notUsed(%1), notUsed(%3), notUsed('de')
+
+replace {
+ ld	%1, (hl)
+ push	%1%2
+ inc	sp
+ ldhl sp, #%5
+ ld	%3, (hl)
+ push	%3%4
+ inc	sp
+} by {
+ ; load from (hl) to bc
+ ld	b, (hl)
+ ldhl sp, #%5 - 1
+ ld	c, (hl)
+ push	bc
+} if notUsed(%1), notUsed(%3), notUsed('bc')
+
+replace {
+ ld	%1, (hl)
+ push	%1%2
+ inc	sp
+ ldhl sp, #%5
+ ld	%3, (hl)
+ push	%3%4
+ inc	sp
+} by {
+ ; load from (hl) to de
+ ld	d, (hl)
+ ldhl sp, #%5 - 1
+ ld	e, (hl)
+ push	de
+} if notUsed(%1), notUsed(%3), notUsed('de')
+
+replace {
+ push	%1%2
+ inc	sp
+ ld	a, %2
+ push	af
+ inc	sp
+} else {
+ push	%1%2
+ ld	a, %2
+}
+
+
+replace {
  ld	%1, #%3
  push	%1%2
  inc	sp
@@ -800,6 +977,132 @@ replace {
  ldh	(c), a ; c is #<(%1)
 } if notSame(%1 'c')
 
+replace {
+ ld	a, (hl)
+ or	a, %1
+ push	af
+ inc	hl
+} by {
+ ld	a, (hl+)
+ or	a, %1
+ push	af
+}
+
+replace {
+ ld	a, (hl)
+ or	a, %1
+ ld	%1, a
+ inc	hl
+} by {
+ ld	a, (hl+)
+ or	a, %1
+ ld	%1, a
+}
+
+//x++ == 0
+replace {
+ ld	%1, (hl)
+ inc	(hl)
+ ld	a, %1
+ or	a, a
+} by {
+ ; directly load into a
+ ld	a, (hl)
+ inc	(hl)
+ or	a, a
+} if notUsed(%1)
+
+replace {
+ push	hl
+ pop	de
+ push	de
+} by {
+ ; remove blind pop push
+ push	hl
+ ld	h, d
+ ld	l, e
+}
+
+replace{
+ inc	%1
+ inc	%1
+ inc	%1
+ inc	%1
+ pop	hl
+ push	hl
+ ld	(hl), %1
+} by {
+ ; add %1 as a
+ ld	a, %1
+ add	a, #0x4
+ pop	hl
+ push	hl
+ ld	(hl), a
+} if notUsed('a'), notUsed(%1)
+
+replace{
+ ld	%1, #0x00
+ xor	a, a
+} by {
+ ; share 0
+ xor	a, a
+ ld	%1, a
+}
+
+replace{
+ inc	bc
+ inc	bc
+ inc	bc
+ inc	bc
+ inc	bc
+} by {
+ ld hl, #0x5
+ add hl, bc
+ ld b, h
+ ld c, l
+} if notUsed('bc')
+
+replace {
+ ld hl, #%1
+ add hl, bc
+ ld b, h
+ ld c, l
+ inc	bc
+} by {
+ ld hl, #%2
+ add hl, bc
+ ld b, h
+ ld c, l
+} if immdInRange(0 65535 '+' %1 1 %x2)
+
+replace {
+ push	bc
+ inc	sp
+ push	de
+ inc	sp
+ ld	a, c
+ push	af
+ inc	sp
+} by {
+ ; push 2x8 as 1x16
+ ld	a, c
+ ld c, d
+ push	bc
+ push	af
+ inc	sp
+} if notUsed('c')
+
+replace {
+ ld	%1, a
+ bit	7, %1
+ jr	Z,%2
+} by {
+ ; rla instead of bit
+ ld	%1, a
+ rla
+ jr	C,%2
+} if notUsed('a'), notUsed('f'), notSame(%1 '(hl)')
+
 // especially needed by HIDE_BKG etc
 replace {
  ldh	a, (%1)
@@ -842,6 +1145,79 @@ replace {
  ld	%3, %4
 } if notVolatile(%1), notSimilar(%1 %3), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)')
 
+replace {
+ ld	a, (hl)
+ or	a, %1
+ ld	%2, a
+ inc	hl
+} by {
+ ld	a, (hl+)
+ or	a, %1
+ ld	%2, a
+} if notSimilar('hl' %2)
+
+
+
+//replace {
+// inc	%1
+//} by {
+// ; not needed inc %1
+//} if notUsed(%1), notUsed('f'), notSame(%1 '(hl)')
+//
+//replace {
+// dec	%1
+//} by {
+// ; not needed inc %1
+//} if notUsed(%1), notUsed('f'), notSame(%1 '(hl)')
+//
+replace {
+ xor	a, %1
+} by {
+ ; not needed xor a, %1
+} if notUsed('a'), notUsed('f')
+//
+//replace {
+// sub	a, %1
+//} by {
+// ; not needed sub a, %1
+//} if notUsed('a'), notUsed('f')
+//
+//replace {
+// sbc	a, %1
+//} by {
+// ; not needed sbc a, %1
+//} if notUsed('a'), notUsed('f')
+//
+//replace {
+// cp	a, %1
+//} by {
+// ; not needed cp a, %1
+//} if  notUsed('f')
+
+//replace {
+// and	a, %1
+//} by {
+// ; not needed and a, %1
+//} if notUsed('a'), notUsed('f')
+//
+//replace {
+// or	a, %1
+//} by {
+// ; not needed and a, %1
+//} if notUsed('a'), notUsed('f')
+//
+//replace {
+// add	a, %1
+//} by {
+// ; not needed add a, %1
+//} if notUsed('a'), notUsed('f')
+//
+//replace {
+// adc	a, %1
+//} by {
+// ; not needed adc a, %1
+//} if notUsed('a'), notUsed('f')
+
 // those should come as late as possible
 
 replace {
@@ -864,6 +1240,23 @@ replace {
  rra
  push	af
 } if notUsed('a'), notUsed(%1), notUsed(%2)
+
+replace {
+ xor	a, a
+ push	af
+ inc	sp
+ xor	a, a
+ push	af
+ inc	sp
+} by {
+ ; even faster than ld bc, #0
+ ; a=0
+ xor	a, a
+ ; f=0
+ rra
+ push	af
+ xor	a, a
+}
 
 replace {
  ld	%1%2, #0x0080
