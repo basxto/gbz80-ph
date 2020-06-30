@@ -1001,7 +1001,7 @@ replace {
  ld	a, (hl+)
  or	a, %1
  push	af
-}
+} if notSame(%1 'hl')
 
 replace {
  ld	a, (hl)
@@ -1013,7 +1013,7 @@ replace {
  ld	a, (hl+)
  or	a, %1
  ld	%1, a
-}
+} if notSame(%1 'hl')
 
 //x++ == 0
 replace {
@@ -1073,7 +1073,7 @@ replace{
  inc	bc
 } by {
  ; simplify bc+=5
- ld hl, #0x5
+ ld hl, #0x0005
  add hl, bc
  ld b, h
  ld c, l
@@ -1118,7 +1118,7 @@ replace {
  ; rla instead of bit
  ld	%1, a
  rla
- jr	C,%2
+ jr	NC,%2
 } if notUsed('a'), notUsed('f'), notSame(%1 '(hl)')
 
 // especially needed by HIDE_BKG etc
