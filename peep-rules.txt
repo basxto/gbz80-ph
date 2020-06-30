@@ -213,6 +213,7 @@ replace {
  sla  %1
  rl   %2
 } by {
+ ; 16bit <<4
  ; no backup needed
  ld   a, (hl)
  swap a
@@ -236,6 +237,7 @@ replace {
  sla  %1
  rl   %2
 } by {
+ ; 16bit <<4
  ; backup
  push af
  ld   a, (hl)
@@ -317,6 +319,7 @@ replace {
  push	af
  inc	sp
 } by {
+ ; load into ram via bc
  ld	bc, #%1
  push bc
 } if notUsed('bc'), notUsed('a'), notUsed('f')
@@ -329,6 +332,7 @@ replace {
  push	af
  inc	sp
 } by {
+ ; load into ram via hl
  ld	hl, #%1
  push hl
 } if notUsed('hl'), notUsed('a'), notUsed('f')
@@ -342,6 +346,7 @@ replace {
  push	af
  inc	sp
 } by {
+ ; load into ram via de
  ld	de, #%1
  push de
 } if notUsed('de'), notUsed('a'), notUsed('f')
@@ -354,6 +359,7 @@ replace {
  push	af
  inc	sp
 } by {
+ ; load into ram via bc and keep af intact
  xor	a, a
  ld	bc, #%1
  push bc
@@ -368,6 +374,7 @@ replace {
  push	af
  inc	sp
 } by {
+ ; load into ram via bc
  xor	a, a
  ld	bc, #0x%1%2%2
  push bc
@@ -481,6 +488,7 @@ replace {
  push	af
  inc	sp
 } else {
+ ; push	%1%2 in one go
  push	%1%2
  ld	a, %2
 }
@@ -629,6 +637,7 @@ replace {
  ld	hl, #%1
  ld	(hl), a
 } by {
+ ; set (hl) directly
  ld	hl, #%1
  set	%2, (hl)
  ld	a, (hl)
@@ -647,6 +656,7 @@ replace {
  res	%2, a
  ld	hl, #%1
 } by {
+ ; just a helper for the following
  ld	hl, #%1
  res	%2, a
 }
@@ -656,6 +666,7 @@ replace {
  ld	a, (hl)
  ld	hl, #0xff%2
 } by {
+ ; don't load the same value into l twice
  ld	l, #0x%2
  ld	a, (hl)
  ld	h, #0xff
@@ -694,6 +705,7 @@ replace{
 } by {
  xor	a, a
  ld	(%1), a
+ ; ld	a, #0x0
  inc	a
 }
 
@@ -702,7 +714,7 @@ replace{
  add %3, #%1
  add %3, #%2
 } by {
- ; dublicated add
+ ; duplicated add
  add %3, #%1+%2
 }
 
@@ -713,7 +725,7 @@ replace {
  inc	a
  ld	(%1%2), a
 } by {
- ; 1byte smaller
+ ; inc (hl) directly - 1byte smaller
  inc	(hl)
  ld	a, (hl)
  ld	%2, l
@@ -857,6 +869,7 @@ replace{
  push	%1%2
  inc	sp
 } by {
+ ; combine push
  ld %2, %1
  ld	%1, #0x%3
  push	%1%2
@@ -869,6 +882,7 @@ replace{
  push	%1%2
  inc	sp
 } by {
+ ; push through hl
  ld	h, #0x%3
  ld l, %1
  push	hl
@@ -983,6 +997,7 @@ replace {
  push	af
  inc	hl
 } by {
+ ; use hl+ even if or and push are between them
  ld	a, (hl+)
  or	a, %1
  push	af
@@ -994,6 +1009,7 @@ replace {
  ld	%1, a
  inc	hl
 } by {
+ ; use hl+ even if or and ld are between them
  ld	a, (hl+)
  or	a, %1
  ld	%1, a
@@ -1019,8 +1035,8 @@ replace {
 } by {
  ; remove blind pop push
  push	hl
- ld	h, d
- ld	l, e
+ ld	d, h
+ ld	e, l
 }
 
 replace{
@@ -1056,11 +1072,12 @@ replace{
  inc	bc
  inc	bc
 } by {
+ ; simplify bc+=5
  ld hl, #0x5
  add hl, bc
  ld b, h
  ld c, l
-} if notUsed('bc')
+} if notUsed('hl')
 
 replace {
  ld hl, #%1
@@ -1069,6 +1086,7 @@ replace {
  ld c, l
  inc	bc
 } by {
+ ; add inc bc to constant instead
  ld hl, #%2
  add hl, bc
  ld b, h
@@ -1144,17 +1162,6 @@ replace {
  ld	%1, %2
  ld	%3, %4
 } if notVolatile(%1), notSimilar(%1 %3), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)')
-
-replace {
- ld	a, (hl)
- or	a, %1
- ld	%2, a
- inc	hl
-} by {
- ld	a, (hl+)
- or	a, %1
- ld	%2, a
-} if notSimilar('hl' %2)
 
 
 
@@ -1292,7 +1299,7 @@ replace restart{
  ; move ld instruction for later optimization
  ld	%3, (hl)
  ld	%1, %2
-} if notSame(%3 %1), notSame(%3 %2), notSame(%1 '(hl+)' '(hl-)' 'hl' 'h' 'l' '(hl)'), notSame(%2 '(hl+)' '(hl-)')
+} if notSame(%3 %1), notSame(%3 %2), notSame(%1 '(hl+)' '(hl-)' 'hl' 'h' 'l' '(hl)' '(de)' '(bc)'), notSame(%2 '(hl+)' '(hl-)' '(hl)' '(de)' '(bc)')
 
 replace restart{
  ld	%2, %1
