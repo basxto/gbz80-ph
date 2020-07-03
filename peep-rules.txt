@@ -21,24 +21,6 @@ replace restart {
 
 
 replace {
- and	a, #%1
- and	a, #%2
-} by {
- ; remove redundant and
- and	a, #%3
-} if immdInRange(0x0 0xff '&' %1 %2 %x3)
-
-replace {
- or	a, #%1
- or	a, #%2
-} by {
- ; remove redundant or
- or	a, #%3
-} if immdInRange(0x0 0xff '|' %1 %2 %x3)
-
-
-
-replace {
  ld	%2, (hl)
  inc	hl
  ld	%1, (hl)
@@ -168,58 +150,6 @@ replace {
 } if canAssign('a' %1), notUsed('a')
 
 
-
-// 16bit <<4
-replace {
- ld	  %1, (hl)
- ld	  %2, #0x00
- sla  %1
- rl   %2
- sla  %1
- rl   %2
- sla  %1
- rl   %2
- sla  %1
- rl   %2
-} by {
- ; 16bit <<4
- ; no backup needed
- ld   a, (hl)
- swap a
- ld   %1, a
- and  a, #0x0f
- ld   %2, a
- ld   a, %1
- and  a, #0xf0
- ld   %1, a
-} if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1), notUsed('a')
-
-replace {
- ld	  %1, (hl)
- ld	  %2, #0x00
- sla  %1
- rl   %2
- sla  %1
- rl   %2
- sla  %1
- rl   %2
- sla  %1
- rl   %2
-} by {
- ; 16bit <<4
- ; backup
- push af
- ld   a, (hl)
- swap a
- ld   %1, a
- and  a, #0x0f
- ld   %2, a
- ld   a, %1
- and  a, #0xf0
- ld   %1, a
- ; restore
- pop  af
-} if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1)
 
 
 

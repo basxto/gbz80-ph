@@ -1,0 +1,16 @@
+replace {
+ and	a, #%1
+ and	a, #%2
+} by {
+ ; redundancy peephole 1 removed redundant and
+ and	a, #%3
+} if immdInRange(0x0 0xff '&' %1 %2 %x3)
+
+replace {
+ or	a, #%1
+ or	a, #%2
+} by {
+ ; redundancy peephole 2 removed redundant and
+ or	a, #%3
+} if immdInRange(0x0 0xff '|' %1 %2 %x3)
+

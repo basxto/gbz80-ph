@@ -1,7 +1,7 @@
 combined-peeph.def: custom-peeph.def peeph-z80.def
 	cat $^ > $@
 
-custom-peeph.def: custom/incdec.def
+custom-peeph.def: custom/incdec.def custom/redundancy.def custom/16bitarithmetic.def
 	cat $^ > $@
 
 clean:

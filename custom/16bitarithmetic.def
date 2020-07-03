@@ -1,0 +1,48 @@
+replace {
+ ld	  %1, (hl)
+ ld	  %2, #0x00
+ sla  %1
+ rl   %2
+ sla  %1
+ rl   %2
+ sla  %1
+ rl   %2
+ sla  %1
+ rl   %2
+} by {
+ ; 16bitarithmetic peephole 1 improve <<4
+ ld   a, (hl)
+ swap a
+ ld   %1, a
+ and  a, #0x0f
+ ld   %2, a
+ ld   a, %1
+ and  a, #0xf0
+ ld   %1, a
+} if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1), notUsed('a')
+
+replace {
+ ld	  %1, (hl)
+ ld	  %2, #0x00
+ sla  %1
+ rl   %2
+ sla  %1
+ rl   %2
+ sla  %1
+ rl   %2
+ sla  %1
+ rl   %2
+} by {
+ ; 16bitarithmetic peephole 2 improve <<4 with backup
+ push af
+ ld   a, (hl)
+ swap a
+ ld   %1, a
+ and  a, #0x0f
+ ld   %2, a
+ ld   a, %1
+ and  a, #0xf0
+ ld   %1, a
+ pop  af
+} if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1)
+
