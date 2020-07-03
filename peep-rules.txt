@@ -616,57 +616,6 @@ replace {
  ld	l, a
 }
 
-// 6b 7c vs 5b 6c
-replace{
- ld	l, a
- ld	h, #0x00
- add	hl, %1%2
- ld	%2, l
- ld	%1, h
-} by {
- ; improved 8bit and 16bit addition
- add	a, %2
- ld	%2, a
- adc	a, %1
- sub	a, %2
- ld	%1, a
-} if notUsed('a'), notUsed('h'), notUsed('l')
-
-// 7b 9c vs 7b 8c
-replace{
- ld	%1, (hl)
- ld	hl, #0x00%3
- add	hl, %1%2
- ld	%2, l
- ld	%1, h
-} by {
- ; improved 8bit and 16bit addition
- ld	a, %2
- add	a, #0x%3
- ld	%2, a
- adc	a, (hl)
- sub	a, %2
- ld	%1, a
-} if notUsed('a'), notUsed('h'), notUsed('l')
-
-//!! increases size
-// 5b 9c vs 7b 7c
-replace{
- ld	b, %1
- inc	bc
- inc	bc
- inc	bc
- inc	bc
-} by {
- ; 16bit +4
- ld	a, c
- add	a, #0x04
- ld	c, a
- adc	a, %1
- sub	c
- ld	b, a
-} if notUsed('a'), notSame(%1 'a'), notSame(%1 'c')
-
 replace{
  ld	a, #0x%3
  push	af
@@ -820,19 +769,6 @@ replace {
  ld	%1, a
 } if notSame(%1 'hl')
 
-//x++ == 0
-replace {
- ld	%1, (hl)
- inc	(hl)
- ld	a, %1
- or	a, a
-} by {
- ; directly load into a
- ld	a, (hl)
- inc	(hl)
- or	a, a
-} if notUsed(%1)
-
 replace {
  push	hl
  pop	de
@@ -860,29 +796,6 @@ replace{
  push	hl
  ld	(hl), a
 } if notUsed('a'), notUsed(%1)
-
-replace{
- ld	%1, #0x00
- xor	a, a
-} by {
- ; share 0
- xor	a, a
- ld	%1, a
-}
-
-replace{
- inc	bc
- inc	bc
- inc	bc
- inc	bc
- inc	bc
-} by {
- ; simplify bc+=5
- ld hl, #0x0005
- add hl, bc
- ld b, h
- ld c, l
-} if notUsed('hl')
 
 replace {
  push	bc
@@ -1017,14 +930,6 @@ replace {
 //} if notUsed('a'), notUsed('f')
 
 // those should come as late as possible
-
-replace {
- ld	%2, #0x%4
- ld	%1, #0x%3
-} by {
- ; 2x8bit to 16bit write
- ld	%1%2, #0x%3%4
-} if canAssign(%1%2 '#0x0201')
 
 // improve the above
 replace {

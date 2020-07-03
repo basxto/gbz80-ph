@@ -10,7 +10,7 @@ replace {
  sla  %1
  rl   %2
 } by {
- ; 16bitarithmetic peephole 1 improve <<4
+ ; 16bitarithmetic peephole 1 improved <<4
  ld   a, (hl)
  swap a
  ld   %1, a
@@ -19,7 +19,7 @@ replace {
  ld   a, %1
  and  a, #0xf0
  ld   %1, a
-} if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1), notUsed('a')
+} if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1), notUsed('af')
 
 replace {
  ld	  %1, (hl)
@@ -33,7 +33,7 @@ replace {
  sla  %1
  rl   %2
 } by {
- ; 16bitarithmetic peephole 2 improve <<4 with backup
+ ; 16bitarithmetic peephole 1a improved <<4 with backup
  push af
  ld   a, (hl)
  swap a
@@ -44,5 +44,70 @@ replace {
  and  a, #0xf0
  ld   %1, a
  pop  af
-} if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1)
+} if canAssign(%2 'a'), canAssign(%1 'a'), canAssign('a' %1), notUsed('f')
+
+replace{
+ ld	l, a
+ ld	h, #0x00
+ add	hl, %1%2
+ ld	%2, l
+ ld	%1, h
+} by {
+ ; 16bitarithmetic peephole 2 improved 8bit and 16bit addition
+ add	a, %2
+ ld	%2, a
+ adc	a, %1
+ sub	a, %2
+ ld	%1, a
+} if notUsed('a'), notUsed('hl'), notUsed('zf')
+
+replace{
+ ld	%1, (hl)
+ ld	hl, #0x00%3
+ add	hl, %1%2
+ ld	%2, l
+ ld	%1, h
+} by {
+ ; 16bitarithmetic peephole 3 improved 8bit and 16bit addition
+ ld	a, %2
+ add	a, #0x%3
+ ld	%2, a
+ adc	a, (hl)
+ sub	a, %2
+ ld	%1, a
+} if notUsed('a'), notUsed('hl'), notUsed('zf')
+
+// increases size, but is faster
+// 5b 9c vs 7b 7c
+replace{
+ ld	b, %1
+ inc	bc
+ inc	bc
+ inc	bc
+ inc	bc
+} by {
+ ; 16bitarithmetic peephole 4 improved speed of 16bit +4
+ ld	a, c
+ add	a, #0x04
+ ld	c, a
+ adc	a, %1
+ sub	c
+ ld	b, a
+} if notUsed('af'), notSame(%1 'a' 'c')
+
+// increases size, but is faster
+// 5b 10c vs 6b 7c
+replace{
+ inc	bc
+ inc	bc
+ inc	bc
+ inc	bc
+ inc	bc
+} by {
+ ; 16bitarithmetic peephole 5 improved bc+=5
+ ld hl, #0x0005
+ add hl, bc
+ ld b, h
+ ld c, l
+} if notUsed('hl'), notUsed('nf' 'hf' 'cf')
 

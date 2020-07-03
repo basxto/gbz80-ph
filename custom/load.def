@@ -43,3 +43,31 @@ replace {
  dec	l
 } if immdInRange(1 1 '-' %2 %3 %4)
 
+//x++ == 0
+replace {
+ ld	%1, (hl)
+ inc	(hl)
+ ld	a, %1
+} by {
+ ; load peephole 5 loaded directly into a instead of going through %1
+ ld	a, (hl)
+ inc	(hl)
+} if notUsed(%1)
+
+replace{
+ ld	%1, #0x00
+ xor	a, a
+} by {
+ ; load peephole 6 shares 0
+ xor	a, a
+ ld	%1, a
+}
+
+replace {
+ ld	%2, #0x%4
+ ld	%1, #0x%3
+} by {
+ ; load peephole 7 combined 8 bit loads into 16 bit load
+ ld	%1%2, #0x%3%4
+} if canAssign(%1%2 '#0x0201')
+
