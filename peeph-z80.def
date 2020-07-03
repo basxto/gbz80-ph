@@ -799,7 +799,7 @@ replace restart {
 	; z80 peephole 75 set bit %2 of %1 directly instead of going through a.
 	set	%2, %1
 	ld	a, %1
-} if canAssign(%1 'b')
+} if canAssign(%1 'b'), notSame(%1 '(hl+)' '(hl-)')
 // canAssign(%1 'b') is true, iff set b, %1 is possible.
 
 replace restart {
@@ -820,7 +820,7 @@ replace restart {
 	; z80 peephole 77 reset bit %2 of %1 directly instead of going through a.
 	res	%2, %1
 	ld	a, %1
-} if canAssign(%1 'b')
+} if canAssign(%1 'b'), notSame(%1 '(hl+)' '(hl-)')
 // canAssign(%1 'b') is true, iff set b, %1 is possible.
 
 replace restart {
@@ -1448,7 +1448,7 @@ replace restart {
 } by {
 	; z80 peephole 134 removed redundant inc sp.
 	ld	sp,%1
-} if notUsed('a')
+}
 
 replace restart {
 	call    %1
