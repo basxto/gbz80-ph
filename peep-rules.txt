@@ -17,37 +17,6 @@ replace restart {
  ld	%1, %3
 } if canAssign(%1%2 '#0x0001'), notSame(%1, %4)
 
-replace restart {
- ld	hl, #%1 + %2
- dec	hl
-} by {
- ; move dec to literal
- ld	hl, #%1 + %3
-} if immdInRange(0 65535 '-' %2 1 %3)
-
-replace restart {
- ld	hl, #%1 - %2
- dec	hl
-} by {
- ; move dec to literal
- ld	hl, #%1 - %3
-} if immdInRange(0 65535 '-' %2 1 %3)
-
-replace restart {
- ld	hl, #%1 + %2
- inc	hl
-} by {
- ; move inc to literal
- ld	hl, #%1 + %3
-} if immdInRange(0 65535 '-' %2 1 %3)
-
-replace restart {
- ld	hl, #%1 - %2
- inc	hl
-} by {
- ; move inc to literal
- ld	hl, #%1 - %3
-} if immdInRange(0 65535 '-' %2 1 %3)
 
 
 
@@ -1078,20 +1047,6 @@ replace{
  ld b, h
  ld c, l
 } if notUsed('hl')
-
-replace {
- ld hl, #%1
- add hl, bc
- ld b, h
- ld c, l
- inc	bc
-} by {
- ; add inc bc to constant instead
- ld hl, #%2
- add hl, bc
- ld b, h
- ld c, l
-} if immdInRange(0 65535 '+' %1 1 %x2)
 
 replace {
  push	bc

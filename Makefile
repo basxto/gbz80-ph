@@ -1,4 +1,7 @@
-combined-peeph.def: peeph-z80.def
+combined-peeph.def: custom-peeph.def peeph-z80.def
+	cat $^ > $@
+
+custom-peeph.def: custom/incdec.def
 	cat $^ > $@
 
 clean:

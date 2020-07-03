@@ -1,0 +1,45 @@
+replace restart {
+ ld	hl, #%1 + %2
+ dec	hl
+} by {
+ ; incdec peephole 1 moved decrement of hl to constant
+ ld	hl, #%1 + %3
+} if immdInRange(0 65535 '-' %2 1 %3)
+
+replace restart {
+ ld	hl, #%1 - %2
+ dec	hl
+} by {
+ ; incdec peephole 2 moved decrement of hl to constant
+ ld	hl, #%1 - %3
+} if immdInRange(0 65535 '+' %2 1 %3)
+
+replace restart {
+ ld	hl, #%1 + %2
+ inc	hl
+} by {
+ ; incdec peephole 3 moved increment of hl to constant
+ ld	hl, #%1 + %3
+} if immdInRange(0 65535 '+' %2 1 %3)
+
+replace restart {
+ ld	hl, #%1 - %2
+ inc	hl
+} by {
+ ; incdec peephole 4 moved increment of hl to constant
+ ld	hl, #%1 - %3
+} if immdInRange(0 65535 '-' %2 1 %3)
+
+replace {
+ ld hl, #%1
+ add hl, bc
+ ld b, h
+ ld c, l
+ inc	bc
+} by {
+ ; incdec peephole 5 moved increment of bc to constant
+ ld hl, #%2
+ add hl, bc
+ ld b, h
+ ld c, l
+} if immdInRange(0 65535 '+' %1 1 %x2)
