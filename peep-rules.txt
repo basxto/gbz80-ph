@@ -514,34 +514,6 @@ replace {
 }
 
 
-
-
-replace {
- ld	hl, #%1
- ld	a, (hl)
- res	%2, a
- ld	hl, #%1
- ld	(hl), a
-} by {
- ; Improve SHOW_BKG etc
- ld	hl, #%1
- res	%2, (hl)
- ld	a, (hl)
-}
-
-replace {
- ld	hl, #%1
- ld	a, (hl)
- set	%2, a
- ld	hl, #%1
- ld	(hl), a
-} by {
- ; set (hl) directly
- ld	hl, #%1
- set	%2, (hl)
- ld	a, (hl)
-}
-
 replace {
  set	%2, a
  ld	hl, #%1
@@ -560,76 +532,10 @@ replace {
  res	%2, a
 }
 
-replace {
- ld	l, #0x%2
- ld	a, (hl)
- ld	hl, #0xff%2
-} by {
- ; don't load the same value into l twice
- ld	l, #0x%2
- ld	a, (hl)
- ld	h, #0xff
-}
 
 
 
 
-replace {
- ld	l, #%2
- ld	(hl), #%1
- ld	l, #%3
-} by {
- ; for TMA_REG, TIMA_REG etc.
- ld	l, #%2
- ld	(hl), #%1
- inc	l
-} if immdInRange(1 1 '-' %3 %2 %4)
-
-replace {
- ld	l, #%2
- ld	(hl), #%1
- ld	l, #%3
-} by {
- ; for TMA_REG, TIMA_REG etc.
- ld	l, #%2
- ld	(hl), #%1
- dec	l
-} if immdInRange(1 1 '-' %2 %3 %4)
-
-
-replace{
- xor	a, a
- ld	(%1), a
- ld	a, #0x01
-} by {
- xor	a, a
- ld	(%1), a
- ; ld	a, #0x0
- inc	a
-}
-
-
-replace{
- add %3, #%1
- add %3, #%2
-} by {
- ; duplicated add
- add %3, #%1+%2
-}
-
-replace {
- ld	%2, l
- ld	%1, h
- ld	a, (%1%2)
- inc	a
- ld	(%1%2), a
-} by {
- ; inc (hl) directly - 1byte smaller
- inc	(hl)
- ld	a, (hl)
- ld	%2, l
- ld	%1, h
-}
 
 replace {
  ldhl	sp, #%1

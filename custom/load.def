@@ -1,0 +1,45 @@
+replace {
+ ld	l, #0x%2
+ ld	a, (hl)
+ ld	hl, #0xff%2
+} by {
+ ; load peephole 1 loads constant value of l just once
+ ld	l, #0x%2
+ ld	a, (hl)
+ ld	h, #0xff
+}
+
+replace{
+ xor	a, a
+ ld	(%1), a
+ ld	a, #0x01
+} by {
+ ; load peephole 2 increments instead of using a constant
+ xor	a, a
+ ld	(%1), a
+ inc	a
+}
+
+// for TMA_REG, TIMA_REG etc
+replace {
+ ld	l, #%2
+ ld	(hl), #%1
+ ld	l, #%3
+} by {
+ ; load peephole 3 increments instead of using a constant
+ ld	l, #%2
+ ld	(hl), #%1
+ inc	l
+} if immdInRange(1 1 '-' %3 %2 %4)
+
+replace {
+ ld	l, #%2
+ ld	(hl), #%1
+ ld	l, #%3
+} by {
+ ; load peephole 4 decrements instead of using a constant
+ ld	l, #%2
+ ld	(hl), #%1
+ dec	l
+} if immdInRange(1 1 '-' %2 %3 %4)
+

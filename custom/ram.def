@@ -1,0 +1,42 @@
+// Improves SHOW_BKG etc
+replace {
+ ld	hl, #%1
+ ld	a, (hl)
+ res	%2, a
+ ld	hl, #%1
+ ld	(hl), a
+} by {
+ ; ram peephole 1 res (hl) directly
+ ld	hl, #%1
+ res	%2, (hl)
+ ld	a, (hl)
+}
+
+// Improves HIDE_BKG etc
+replace {
+ ld	hl, #%1
+ ld	a, (hl)
+ set	%2, a
+ ld	hl, #%1
+ ld	(hl), a
+} by {
+ ; ram peephole 2 set (hl) directly
+ ld	hl, #%1
+ set	%2, (hl)
+ ld	a, (hl)
+}
+
+replace {
+ ld	%2, l
+ ld	%1, h
+ ld	a, (%1%2)
+ inc	a
+ ld	(%1%2), a
+} by {
+ ; ram peephole 3 inc (hl) directly
+ inc	(hl)
+ ld	a, (hl)
+ ld	%2, l
+ ld	%1, h
+}
+
