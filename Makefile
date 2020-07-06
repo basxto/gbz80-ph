@@ -4,5 +4,9 @@ combined-peeph.def: custom-peeph.def peeph-z80.def
 custom-peeph.def: custom/incdec.def custom/redundancy.def custom/16bitarithmetic.def custom/ram.def custom/load.def custom/pusharg.def
 	cat $^ > $@
 
+# use this with -Wf--no-peep
+internal-peeph.def: special-gbz80.def custom-peeph.def peeph-z80.def
+	cat $^ > $@
+
 clean:
-	rm -f peeph-z80.def
+	rm -f combined-peeph.def custom-peeph.def internal-peeph.def
