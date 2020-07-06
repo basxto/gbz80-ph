@@ -115,3 +115,12 @@ replace {
 	inc	bc
 }
 
+replace restart {
+	ldhl	sp,#%1
+	dec	hl
+} by {
+	; peephole GB7 combined ld and dec.
+	ldhl	sp,#%2
+} if immdInRange(-128 127 '-' %1 1 %2)
+
+
