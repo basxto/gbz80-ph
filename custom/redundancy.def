@@ -4,7 +4,7 @@ replace {
 } by {
  ; redundancy peephole 1 removed redundant and
  and	a, #%3
-} if immdInRange(0x0 0xff '&' %1 %2 %x3)
+} if operandsLiteral(%1 %2), immdInRange(0x0 0xff '&' %1 %2 %x3)
 
 replace {
  or	a, #%1
@@ -12,13 +12,52 @@ replace {
 } by {
  ; redundancy peephole 2 removed redundant and
  or	a, #%3
-} if immdInRange(0x0 0xff '|' %1 %2 %x3)
+} if operandsLiteral(%1 %2), immdInRange(0x0 0xff '|' %1 %2 %x3)
+
+replace {
+ xor	a, #%1
+ xor	a, #%2
+} by {
+ ; redundancy peephole 2 removed redundant xor
+ xor	a, #%3
+} if operandsLiteral(%1 %2), immdInRange(0x0 0xff '^' %1 %2 %x3)
 
 replace{
- add %3, #%1
- add %3, #%2
+ add %4, #%1
+ add %4, #%2
 } by {
- ; redundancy peephole 3 removed redundant add
- add %3, #%1+%2
+ ; redundancy peephole 4 removed redundant add
+ add %4, #%3
+} if operandsLiteral(%1 %2), immdInRange(0 0xff '+' %1 %2 %x3)
+
+replace{
+ add sp, #%1
+ add sp, #%2
+} by {
+ ; redundancy peephole 5 removed redundant add for sp
+ add sp, #%3
+} if operandsLiteral(%1 %2), immdInRange(0 0xffff '+' %1 %2 %x3)
+
+replace{
+ add %4, #%1
+ add %4, #%2
+} by {
+ ; redundancy peephole 6 removed redundant add
+ add %4, #%1 + %2
 }
 
+replace{
+ sub %4, #%1
+ sub %4, #%2
+} by {
+ ; redundancy peephole 7 removed redundant add
+ sub %4, #%3
+} if operandsLiteral(%1 %2), immdInRange(0 0xff '+' %1 %2 %x3)
+
+replace{
+ sub %4, #%1
+ sub %4, #%2
+} by {
+ ; redundancy peephole 8 removed redundant add
+ sub %4, #%1 + %2
+}

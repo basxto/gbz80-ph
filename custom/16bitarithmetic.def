@@ -63,19 +63,19 @@ replace{
 
 replace{
  ld	%1, (hl)
- ld	hl, #0x00%3
+ ld	hl, #%3
  add	hl, %1%2
  ld	%2, l
  ld	%1, h
 } by {
  ; 16bitarithmetic peephole 3 improved 8bit and 16bit addition
  ld	a, %2
- add	a, #0x%3
+ add	a, #%4
  ld	%2, a
  adc	a, (hl)
  sub	a, %2
  ld	%1, a
-} if notUsed('a'), notUsed('hl'), notUsed('zf')
+} if operandsLiteral(%3), immdInRange(0x00 0xff '|' %3 0 %x4), notUsed('a'), notUsed('hl'), notUsed('zf')
 
 // increases size, but is faster
 // 5b 9c vs 7b 7c
