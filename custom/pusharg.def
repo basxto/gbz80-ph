@@ -1,3 +1,77 @@
+// rules with constants have priority (16 bit load is faster)
+
+replace {
+ ld	%2, #%1
+ push	%2%3
+ inc	sp
+ ld	%5, #%4
+ push	%5%6
+ inc	sp
+} by {
+ ; pusharg peephole 1 pushed %2%3 instead of pushing %2%3 and %5%6
+ ld	%3, #%4
+ ld	%2, #%1
+ push	%2%3
+} if notSame('f' %3), notUsed(%3), notUsed(%5)
+
+replace {
+ ld	%2, #%1
+ push	%2%3
+ inc	sp
+ ld	%5, #%4
+ push	%5%6
+ inc	sp
+} by {
+ ; pusharg peephole 2 pushed %5%6 instead of pushing %2%3 and %5%6
+ ld	%6, #%4
+ ld	%5, #%1
+ push	%5%6
+} if notSame('f' %6), notUsed(%6), notUsed(%2), notUsed(%5)
+
+replace {
+ ld	%2, #%1
+ push	%2%3
+ inc	sp
+ ld	%5, #%4
+ push	%5%6
+ inc	sp
+} by {
+ ; pusharg peephole 3 pushed bc instead of pushing %2%3 and %5%6
+ ld	c, #%4
+ ld	b, #%1
+ push	bc
+} if notUsed('bc'), notUsed(%2), notUsed(%5)
+
+replace {
+ ld	%2, #%1
+ push	%2%3
+ inc	sp
+ xor	a, a
+ push	af
+ inc	sp
+} by {
+ ; pusharg peephole 4 pushed %2%3 instead of pushing %2%3 and af
+ ld	%3, #0x00
+ ld	%2, #%1
+ push	%2%3
+} if notSame('f' %3), notUsed(%3), notUsed('af')
+
+replace {
+ xor	a, a
+ push	af
+ inc	sp
+ ld	%2, #%1
+ push	%2%3
+ inc	sp
+} by {
+ ; pusharg peephole 5 pushed %2%3 instead of pushing %2%3 and af
+ ld	%3, #%1
+ ld	%2, #0x00
+ push	%2%3
+} if notSame('f' %3), notUsed(%3), notUsed(%2), notUsed('af')
+
+// other rules
+
 replace {
  ld	%2, %1
  push	%2%3
@@ -5,11 +79,11 @@ replace {
  push	af
  inc	sp
 } by {
- ; pusharg peephole 1 pushed %2%3 instead of pushing %2%3 and af
+ ; pusharg peephole 6 pushed %2%3 instead of pushing %2%3 and af
  ld	%2, %1
  ld %3, a
  push	%2%3
-} if notUsed(%3)
+} if notSame('f' %3), notUsed(%3)
 
 replace {
  ld	%3, %1
@@ -20,7 +94,7 @@ replace {
  push	%5%6
  inc	sp
 } by {
- ; pusharg peephole 2 pushed bc instead of pushing %3%4 and %5%6
+ ; pusharg peephole 7 pushed bc instead of pushing %3%4 and %5%6
  ld	%3, %1
  ld	b, %3
  ldhl	sp,	#%7
@@ -37,7 +111,7 @@ replace {
  push	%3%4
  inc	sp
 } by {
- ; pusharg peephole 3 pushed bc instead of pushing %1%2 and %3%4
+ ; pusharg peephole 8 pushed bc instead of pushing %1%2 and %3%4
  ld	%1, %5
  ld	b, %1
  ld	%3, %6
@@ -54,7 +128,7 @@ replace {
  push 	%3%4
  inc	sp
 } by {
- ; pusharg peephole 4 pushed two (hl) values through bc
+ ; pusharg peephole 9 pushed two (hl) values through bc
  ld	b, (hl)
  dec	hl
  ld	c, (hl)
@@ -71,7 +145,7 @@ replace {
  push 	%3%4
  inc	sp
 } by {
- ; pusharg peephole 5 pushed two (hl) values through bc
+ ; pusharg peephole 10 pushed two (hl) values through bc
  ld	b, (hl)
  inc	hl
  ld	c, (hl)
@@ -86,7 +160,7 @@ replace {
  push 	af
  inc	sp
 } by {
- ; pusharg peephole 6 pushed %5 and `xor a` through bc
+ ; pusharg peephole 11 pushed %5 and `xor a` through bc
  ld	%1, %5
  ld	b, %1
  ld	c, #0x00
@@ -101,12 +175,14 @@ replace {
  push	%1%2
  inc	sp
 } by {
- ; pusharg peephole 7 pushed `xor a` and %5 through bc
+ ; pusharg peephole 12 pushed `xor a` and %5 through bc
  ld	%1, %5
  ld	c, %1
  ld	b, #0x00
  push	bc
 } if notUsed('bc'), notUsed('af'), notSame('a', %5)
+
+// push 0 faster
 
 replace {
  xor	a, a
@@ -116,7 +192,7 @@ replace {
  push 	af
  inc	sp
 } by {
- ; pusharg peephole 8 pushed double `xor a` fast
+ ; pusharg peephole 13 pushed double `xor a` fast
  xor	a, a
  rra
  push	af
@@ -128,7 +204,7 @@ replace {
  ld	%1, #%2
  push	%1
 } by {
- ; pusharg peephole 9 pushed #0x0000 faster
+ ; pusharg peephole 14 pushed #0x0000 faster
  xor	a, a
  rra
  push	af
