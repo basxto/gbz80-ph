@@ -2106,35 +2106,35 @@ replace restart {
 // Replace jp by ret before replacing jp by jr outside of jump tables, since using ret can reduce the number of references to jump labels.
 barrier
 
-replace {
+replace restart {
 	jp	%5
 } by {
 	jr	%5
 	; z80 peephole 162 changed absolute to relative unconditional jump.
 } if labelInRange(%5)
 
-replace {
+replace restart {
 	jp	Z,%5
 } by {
 	jr	Z,%5
 	; z80 peephole 163 changed absolute to relative conditional jump.
 } if labelInRange(%5)
 
-replace {
+replace restart {
 	jp	NZ,%5
 } by {
 	jr	NZ,%5
 	; z80 peephole 164 changed absolute to relative conditional jump.
 } if labelInRange(%5)
 
-replace {
+replace restart {
 	jp	C,%5
 } by {
 	jr	C,%5
 	; z80 peephole 165 changed absolute to relative conditional jump.
 } if labelInRange(%5)
 
-replace {
+replace restart {
 	jp	NC,%5
 } by {
 	jr	NC,%5

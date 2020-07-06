@@ -4,7 +4,7 @@ replace{
 	ld	hl, #%1
 	ld	a, (hl)
 } by {
-	; peephole GB0 used ldh instead of ld a, (hl).
+	; gbz80 peephole 0 used ldh instead of ld a, (hl).
 	ldh	a, (#%1)
 } if operandsLiteral(%1), immdInRange(0xff00 0xffff '|' %1 0 %2), notUsed('hl')
 
@@ -12,7 +12,7 @@ replace{
  ld	hl, #%1
  ld	(hl), a
 } by {
- ; peephole GB1 used ldh instead of ld (hl), a.
+ ; gbz80 peephole 1 used ldh instead of ld (hl), a.
  ldh	(#%1), a
 } if operandsLiteral(%1), immdInRange(0xff00 0xffff '|' %1 0 %2), notUsed('hl')
 
@@ -21,7 +21,7 @@ replace {
  inc	hl
 } by {
  ld	a, (hl+)
- ; peephole GB2 used ldi to increment hl after load
+ ; gbz80 peephole 2 used ldi to increment hl after load
 }
 
 replace {
@@ -30,7 +30,7 @@ replace {
 } by {
  ld	a, (hl+)
  ld	%1, a
- ; peephole GB2b used ldi to increment hl after load
+ ; gbz80 peephole 2b used ldi to increment hl after load
 } if notUsed('a')
 
 replace {
@@ -39,7 +39,7 @@ replace {
 } by {
  ld	a, (hl-)
  ld	%1, a
- ; peephole GB3 used ldd to decrement hl after load
+ ; gbz80 peephole 3 used ldd to decrement hl after load
 } if notUsed('a')
 
 replace {
@@ -47,7 +47,7 @@ replace {
  dec	hl
 } by {
  ld	a, (hl-)
- ; peephole GB3b used ldd to decrement hl after load
+ ; gbz80 peephole 3b used ldd to decrement hl after load
 }
 
 replace {
@@ -55,7 +55,7 @@ replace {
  inc	hl
 } by {
  ld	(hl+), a
- ; peephole GB4 used ldi to increment hl after load
+ ; gbz80 peephole 4 used ldi to increment hl after load
 }
 
 replace {
@@ -64,7 +64,7 @@ replace {
 } by {
  ld	a, %1
  ld	(hl+), a
- ; peephole GB4b used ldi to increment hl after load
+ ; gbz80 peephole 4b used ldi to increment hl after load
 } if notUsed('a')
 
 replace {
@@ -72,7 +72,7 @@ replace {
  dec	hl
 } by {
  ld	(hl-), a
- ; peephole GB5 used ldd to decrement hl after load
+ ; gbz80 peephole 5 used ldd to decrement hl after load
 }
 
 replace {
@@ -81,14 +81,14 @@ replace {
 } by {
  ld	a, %1
  ld	(hl-), a
- ; peephole GB5b used ldd to decrement hl after load
+ ; gbz80 peephole 5b used ldd to decrement hl after load
 } if notUsed('a')
 
 replace {
  inc hl
  dec hl
 } by {
- ; peephole GB6 removed inc hl / dec hl pair
+ ; gbz80 peephole 6 removed inc hl / dec hl pair
 }
 
 replace {
@@ -98,7 +98,7 @@ replace {
 	inc	hl
 } by {
 	ld	(hl+), a
-	; peephole GB7 used ldi to increment hl
+	; gbz80 peephole 7 used ldi to increment hl
 	inc	de
 	ld	a, (de)
 }
@@ -110,7 +110,7 @@ replace {
 	inc	hl
 } by {
 	ld	a, (hl+)
-	; peephole GB8 used ldi to increment hl
+	; gbz80 peephole 8 used ldi to increment hl
 	ld	(bc), a
 	inc	bc
 }
@@ -119,8 +119,31 @@ replace restart {
 	ldhl	sp,#%1
 	dec	hl
 } by {
-	; peephole GB7 combined ld and dec.
+	; gbz80 peephole 7 combined ld and dec.
 	ldhl	sp,#%2
 } if immdInRange(-128 127 '-' %1 1 %2)
 
+replace {
+	pop	%1
+	pop	%2
+	push	%2
+	push	%1
+} by {
+	; gbz80 peephole 8 removed not needed push
+	pop	%1
+	pop	%2
+} if notSame(%1 %2), notUsed('sp')
+
+replace {
+	pop	%1
+	pop	%2
+	push	%2
+	push	%1
+} by {
+	; gbz80 peephole 8b removed not needed push
+	ldhl	sp, #0
+	pop	%1
+	pop	%2
+	ld	sp, hl
+} if notSame(%1 %2), notUsed('hl')
 
