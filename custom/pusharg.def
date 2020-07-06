@@ -1,0 +1,135 @@
+replace {
+ ld	%2, %1
+ push	%2%3
+ inc	sp
+ push	af
+ inc	sp
+} by {
+ ; pusharg peephole 1 pushed %2%3 instead of pushing %2%3 and af
+ ld	%2, %1
+ ld %3, a
+ push	%2%3
+} if notUsed(%3)
+
+replace {
+ ld	%3, %1
+ push	%3%4
+ inc	sp
+ ldhl	sp,	#%2
+ ld	%5, (hl)
+ push	%5%6
+ inc	sp
+} by {
+ ; pusharg peephole 2 pushed bc instead of pushing %3%4 and %5%6
+ ld	%3, %1
+ ld	b, %3
+ ldhl	sp,	#%7
+ ld	c, (hl)
+ push	bc
+} if notUsed('bc'), immdInRange(-128 127 '-' %2 1 %7)
+
+
+replace {
+ ld	%1, %5
+ push	%1%2
+ inc	sp
+ ld	%3, %6
+ push	%3%4
+ inc	sp
+} by {
+ ; pusharg peephole 3 pushed bc instead of pushing %1%2 and %3%4
+ ld	%1, %5
+ ld	b, %1
+ ld	%3, %6
+ ld	c, %3
+ push	bc
+} if notUsed('bc'), notSame('b' %6 %3)
+
+replace {
+ ld	%1, (hl)
+ push	%1%2
+ inc	sp
+ dec	hl
+ ld	%3, (hl)
+ push 	%3%4
+ inc	sp
+} by {
+ ; pusharg peephole 4 pushed two (hl) values through bc
+ ld	b, (hl)
+ dec	hl
+ ld	c, (hl)
+ push 	bc
+} if notUsed('bc'), notUsed(%1), notUsed(%3)
+
+
+replace {
+ ld	%1, (hl)
+ push	%1%2
+ inc	sp
+ inc	hl
+ ld	%3, (hl)
+ push 	%3%4
+ inc	sp
+} by {
+ ; pusharg peephole 5 pushed two (hl) values through bc
+ ld	b, (hl)
+ inc	hl
+ ld	c, (hl)
+ push 	bc
+} if notUsed('bc'), notUsed(%1), notUsed(%3)
+
+replace {
+ ld	%1, %5
+ push	%1%2
+ inc	sp
+ xor	a, a
+ push 	af
+ inc	sp
+} by {
+ ; pusharg peephole 6 pushed %5 and `xor a` through bc
+ ld	%1, %5
+ ld	b, %1
+ ld	c, #0x00
+ push	bc
+} if notUsed('bc'), notUsed('af')
+
+replace {
+ xor	a, a
+ push 	af
+ inc	sp
+ ld	%1, %5
+ push	%1%2
+ inc	sp
+} by {
+ ; pusharg peephole 7 pushed `xor a` and %5 through bc
+ ld	%1, %5
+ ld	c, %1
+ ld	b, #0x00
+ push	bc
+} if notUsed('bc'), notUsed('af'), notSame('a', %5)
+
+replace {
+ xor	a, a
+ push 	af
+ inc	sp
+ xor	a, a
+ push 	af
+ inc	sp
+} by {
+ ; pusharg peephole 8 pushed double `xor a` fast
+ xor	a, a
+ rra
+ push	af
+ xor	a, a
+}
+
+// replace all variants of #0
+replace {
+ ld	%1, #%2
+ push	%1
+} by {
+ ; pusharg peephole 9 pushed #0x0000 faster
+ xor	a, a
+ rra
+ push	af
+} if operandsLiteral(%2), immdInRange(0 0 '+' %2 0 %3), notUsed(%1), notUsed('af')
