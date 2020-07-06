@@ -1,3 +1,7 @@
+## This needs SVN version / snapshot of SDCC
+
+Rules depend on peep hole functions, which **aren't** implemented in version **4.0.0**, and therefore will lead to errors in that version.
+
 Build
 =====
 ```shell
@@ -63,11 +67,11 @@ You will get comments like this:
 
 and so on.
 
-For testing you can remove .def-files from the `Makefile` or comment out single rules with `\\` and a multiline cursor.
+For testing you can remove .def-files from the `Makefile` or comment out single rules with `//` and a multiline cursor.
 
 Master
 ======
-`develop` branch should only be merged into `master` if it passes all regression tests of sdcc for gbz80.
+`develop` branch should only be merged into `master` if it passes all regression tests of sdcc for gbz80:
 ```bash
 SDCCCODEDIR=/path/to/sdcc-code
 PROCESSES=8
