@@ -59,7 +59,7 @@ You will get comments like this:
 
 `incdec peephole 1` is rule 1 of `custom/incdec.def`
 
-`gbz80 peephole 2b` is rule 2b of `peeph-gbz80.def`
+`gbz80 peephole 2b` is rule 2b of `special-gbz80.def`
 
 `16bitarithmetic peephole 3` is rule 3 of `custom/16bitarithmetic.def`
 

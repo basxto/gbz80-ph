@@ -1571,16 +1571,6 @@ replace restart {
 } if notUsed(%1)
 
 replace restart {
-	sbc	a,%1
-	bit	7,a
-	jp	NZ,%2
-} by {
-	sbc	a,%1
-	jp	M,%2
-	; z80 peephole 150 used sign flag instead of testing bit 7.
-}
-
-replace restart {
 	ld	%1,a
 	or	a,a
 	jp	%3,%4

@@ -2,7 +2,7 @@ replace {
  and	a, #%1
  and	a, #%2
 } by {
- ; redundancy peephole 1 removed redundant and
+ ; redundancy peephole 1 removed redundant and: %1 & %2
  and	a, #%3
 } if operandsLiteral(%1 %2), immdInRange(0x0 0xff '&' %1 %2 %x3)
 
@@ -10,7 +10,7 @@ replace {
  or	a, #%1
  or	a, #%2
 } by {
- ; redundancy peephole 2 removed redundant and
+ ; redundancy peephole 2 removed redundant or: %1 | %2
  or	a, #%3
 } if operandsLiteral(%1 %2), immdInRange(0x0 0xff '|' %1 %2 %x3)
 
@@ -18,7 +18,7 @@ replace {
  xor	a, #%1
  xor	a, #%2
 } by {
- ; redundancy peephole 2 removed redundant xor
+ ; redundancy peephole 2 removed redundant xor: %1 ^ %2
  xor	a, #%3
 } if operandsLiteral(%1 %2), immdInRange(0x0 0xff '^' %1 %2 %x3)
 
@@ -26,31 +26,32 @@ replace{
  add %4, #%1
  add %4, #%2
 } by {
- ; redundancy peephole 4 removed redundant add
+ ; redundancy peephole 4 removed redundant add: %1 + %2
  add %4, #%3
-} if operandsLiteral(%1 %2), immdInRange(0 0xff '+' %1 %2 %x3)
+} if notSame('sp' %4), operandsLiteral(%1 %2), immdInRange(0 0xff '+' %1 %2 %x3)
 
 replace{
  add sp, #%1
  add sp, #%2
 } by {
- ; redundancy peephole 5 removed redundant add for sp
+ ; redundancy peephole 5 removed redundant add for sp: %1 + %2
  add sp, #%3
-} if operandsLiteral(%1 %2), immdInRange(0 0xffff '+' %1 %2 %x3)
+} if operandsLiteral(%1 %2), immdInRange(-128 127 '+' %1 %2 %x3)
 
+// don't optimize sp without range check
 replace{
  add %4, #%1
  add %4, #%2
 } by {
  ; redundancy peephole 6 removed redundant add
  add %4, #%1 + %2
-}
+} if notSame('sp' %4)
 
 replace{
  sub %4, #%1
  sub %4, #%2
 } by {
- ; redundancy peephole 7 removed redundant add
+ ; redundancy peephole 7 removed redundant add: %1 + %2
  sub %4, #%3
 } if operandsLiteral(%1 %2), immdInRange(0 0xff '+' %1 %2 %x3)
 
@@ -61,3 +62,4 @@ replace{
  ; redundancy peephole 8 removed redundant add
  sub %4, #%1 + %2
 }
+

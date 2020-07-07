@@ -199,13 +199,16 @@ replace {
  xor	a, a
 }
 
-// replace all variants of #0
-replace {
- ld	%1, #%2
- push	%1
-} by {
- ; pusharg peephole 14 pushed #0x0000 faster
- xor	a, a
- rra
- push	af
-} if operandsLiteral(%2), immdInRange(0 0 '+' %2 0 %3), notUsed(%1), notUsed('af')
+// this broke SDCC regression tests
+
+//// replace all variants of #0
+//replace {
+// ld	%1, #%2
+// push	%1
+//} by {
+// ; pusharg peephole 14 pushed #0x0000 faster
+// xor	a, a
+// rra
+// push	af
+//} if operandsLiteral(%2), immdInRange(0 0 '+' %2 0 %3), notUsed(%1), notUsed('af')
+
