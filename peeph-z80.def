@@ -1491,9 +1491,9 @@ replace restart {
 }
 
 replace restart {
-	ld      sp,hl
-	ld      hl,#0x0002
-	add     hl,sp
+	ld	sp,hl
+	ld	hl,#0x0002
+	add	hl,sp
 } by {
 	ld	sp, hl
 	inc	hl
@@ -1525,6 +1525,36 @@ replace restart {
 
 replace restart {
 	pop	af
+	push	hl
+} by {
+	; z80 peephole 142 used ex to move hl onto the stack.
+	ex	(sp),hl
+} if isPort('z80' 'ez80_z80'), notUsed('a'), notUsed('hl')
+
+replace restart {
+	pop	af
+	ld	hl, #%1
+	push	hl
+} by {
+	ld	hl, #%1
+	; z80 peephole 143 used ex to move hl onto the stack.
+	ex	(sp),hl
+} if isPort('z80' 'ez80_z80'), notUsed('a'), notUsed('hl')
+
+replace restart {
+	pop	af
+	inc	sp
+	ld	hl,#%1
+	push	hl
+} by {
+	inc	sp
+	ld	hl,#%1
+	; z80 peephole 144 used ex to move #%1 onto the stack.
+	ex	(sp),hl
+} if isPort('z80' 'ez80_z80'), notUsed('a'), notUsed('hl')
+
+replace restart {
+	pop	af
 	inc	sp
 	ld	h, %1 (ix)
 	ld	l, %2 (ix)
@@ -1536,6 +1566,18 @@ replace restart {
 	; z80 peephole 145 used ex to move %1 (ix) %2 (ix) onto the stack.
 	ex	(sp),hl
 } if notUsed('a'), notUsed('hl')
+
+replace restart {
+	pop	af
+	ld	a,#%1
+	push	af
+	inc	sp
+} by {
+	ld	h,#%1
+	ex	(sp),hl
+	; z80 peephole 146 used ex to move #%1 onto the stack.
+	inc	sp
+} if isPort('z80' 'ez80_z80'), notUsed('a'), notUsed('hl')
 
 replace restart {
 	ld	%1,#%2
@@ -1569,6 +1611,16 @@ replace restart {
 	bit	%2,a
 	; z80 peephole 149 tested bit %2 of a directly instead of going through %1.
 } if notUsed(%1)
+
+replace restart {
+	sbc	a,%1
+	bit	7,a
+	jp	NZ,%2
+} by {
+	sbc	a,%1
+	jp	 M,%2
+	; z80 peephole 150 used sign flag instead of testing bit 7.
+} if isPort('z80' 'ez80_z80')
 
 replace restart {
 	ld	%1,a
@@ -1832,6 +1884,24 @@ replace restart {
 	; z80 peephole 176 remove unnecessary load back
 } if notVolatile(%1), notVolatile(%2), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)')
 
+// These ex-generating rules should be among the last ones since ex counts as a read from both hl and de for notUsed().
+barrier
+
+replace restart {
+	ld	e,l
+	ld	d,h
+} by {
+	; z80 peephole 156 used ex to load hl into de.
+	ex	de,hl
+} if isPort('z80' 'ez80_z80'), notUsed('hl')
+
+replace restart {
+	ld	l,e
+	ld	h,d
+} by {
+	; z80 peephole 157 used ex to load de into hl.
+	ex	de,hl
+} if isPort('z80' 'ez80_z80'), notUsed('de')
 
 barrier
 
@@ -2130,5 +2200,13 @@ replace restart {
 	jr	NC,%5
 	; z80 peephole 166 changed absolute to relative conditional jump.
 } if labelInRange(%5)
+
+replace {
+	dec	b
+	jr	NZ,	%5
+} by {
+	djnz	%5
+	; z80 peephole 167 used djnz
+} if isPort('z80' 'ez80_z80')
 
 barrier
