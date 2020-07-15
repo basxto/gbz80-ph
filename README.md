@@ -5,7 +5,7 @@ Rules depend on peep hole functions, which **aren't** implemented in version **4
 Build
 =====
 ```shell
-$ make combined-peeph.def internal-peeph.def
+$ make combined-peeph.de
 ```
 
 Use
@@ -14,10 +14,8 @@ Attach the following flag when you call `lcc`:
 ```bash
 -Wf"--peep-file/absolute/path/to/gbz80-ph/combined-peeph.def"
 ```
-If you want to replace the internal peep hole rules use:
-```bash
--Wf--no-peep -Wf"--peep-file/absolute/path/to/gbz80-ph/internal-peeph.def"
-```
+
+`combined-peeph.def` is the only optimization file you need, the other ones are source rules or intermediate steps of the make file.
 
 Debug
 =====
@@ -91,3 +89,4 @@ cd ${SDCCCODEDIR}/sdcc/support/regression
 make clean
 make test-ucgbz80 -j${PROCESSES}
 ```
+`internal-peeph.def` replicates internal rules, which get overwritten here.
