@@ -1,0 +1,20 @@
+// rules which make use of ldd/ldi
+
+replace {
+ ld	(hl), #%1
+ inc	hl
+} by {
+ ; lddi peephole 1 loaded constant into (hl) through a
+ ld	a, #%1
+ ld	(hl+), a
+} if notUsed('a')
+
+replace {
+ ld	(hl), #%1
+ dec	hl
+} by {
+ ; lddi peephole 2 loaded constant into (hl) through a
+ ld	a, #%1
+ ld	(hl-), a
+} if notUsed('a')
+
