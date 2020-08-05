@@ -40,3 +40,17 @@ replace {
  ld	%1, h
 }
 
+replace {
+ add	sp, #2
+} by {
+ ; ram peephole 4 used pop af instead of lda sp
+ pop af
+} if notUsed('af')
+
+replace {
+ add	sp, #2
+} by {
+ ; ram peephole 5 used pop %1 instead of lda sp
+ pop %1
+} if notUsed('f'), unusedReg(%1 'bc' 'de' 'hl')
+
