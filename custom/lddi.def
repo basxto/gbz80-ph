@@ -18,3 +18,15 @@ replace {
  ld	(hl-), a
 } if notUsed('a')
 
+replace {
+ ldhl	sp,	#%2
+ ld	a, (hl)
+ ld	(%1),a
+ ldhl	sp,	#%3
+} by {
+ ; lddi peephole 3 increment hl instead of lda
+ ldhl	sp,	#%2
+ ld	a, (hl+)
+ ld	(%1),a
+} if notSame(%1 'hl'), immdInRange(1 1 '-' %3 %2 %4)
+

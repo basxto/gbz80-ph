@@ -47,16 +47,23 @@ replace restart {
 } if operandsLiteral(%1), immdInRange(0 65535 '+' %1 1 %2)
 
 replace restart {
- ld hl, #%1
- add hl, %2
- ld b, h
- ld c, l
+ ld	hl, #%1
+ add	hl, %2
+ ld	b, h
+ ld	c, l
  inc	%2
 } by {
  ; incdec peephole 7 moved increment of %2 to constant
- ld hl, #%3
- add hl, %2
- ld b, h
- ld c, l
+ ld	hl, #%3
+ add	hl, %2
+ ld	b, h
+ ld	c, l
 } if immdInRange(0 65535 '+' %1 1 %x3)
+
+replace {
+ sub	a, #0x01
+} by {
+ ; incdec peephole 8 turned sub into decrement
+ dec	a
+} if notUsed('cf')
 
