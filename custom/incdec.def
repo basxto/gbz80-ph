@@ -4,7 +4,7 @@ replace restart {
 } by {
  ; incdec peephole 1 moved decrement of hl to constant
  ld	hl, #%1 + %3
-} if immdInRange(0 65535 '-' %2 1 %3)
+} if operandsLiteral(%2), immdInRange(0 65535 '-' %2 1 %3)
 
 replace restart {
  ld	hl, #%1 - %2
@@ -12,7 +12,7 @@ replace restart {
 } by {
  ; incdec peephole 2 moved decrement of hl to constant
  ld	hl, #%1 - %3
-} if immdInRange(0 65535 '+' %2 1 %3)
+} if operandsLiteral(%2), immdInRange(0 65535 '+' %2 1 %3)
 
 replace restart {
  ld	hl, #%1 + %2
@@ -20,7 +20,7 @@ replace restart {
 } by {
  ; incdec peephole 3 moved increment of hl to constant
  ld	hl, #%1 + %3
-} if immdInRange(0 65535 '+' %2 1 %3)
+} if operandsLiteral(%2), immdInRange(0 65535 '+' %2 1 %3)
 
 replace restart {
  ld	hl, #%1 - %2
@@ -28,7 +28,7 @@ replace restart {
 } by {
  ; incdec peephole 4 moved increment of hl to constant
  ld	hl, #%1 - %3
-} if immdInRange(0 65535 '-' %2 1 %3)
+} if operandsLiteral(%2), immdInRange(0 65535 '-' %2 1 %3)
 
 replace restart {
  ld	hl, #%1
@@ -47,16 +47,23 @@ replace restart {
 } if operandsLiteral(%1), immdInRange(0 65535 '+' %1 1 %2)
 
 replace restart {
- ld hl, #%1
- add hl, %2
- ld b, h
- ld c, l
+ ld	hl, #%1
+ add	hl, %2
+ ld	b, h
+ ld	c, l
  inc	%2
 } by {
  ; incdec peephole 7 moved increment of %2 to constant
- ld hl, #%3
- add hl, %2
- ld b, h
- ld c, l
-} if immdInRange(0 65535 '+' %1 1 %x3)
+ ld	hl, #%3
+ add	hl, %2
+ ld	b, h
+ ld	c, l
+} if operandsLiteral(%1), immdInRange(0 65535 '+' %1 1 %x3)
+
+replace {
+ sub	a, #0x01
+} by {
+ ; incdec peephole 8 turned sub into decrement
+ dec	a
+} if notUsed('cf')
 

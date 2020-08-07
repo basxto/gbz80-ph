@@ -1,0 +1,32 @@
+// rules which make use of ldd/ldi
+
+replace {
+ ld	(hl), #%1
+ inc	hl
+} by {
+ ; lddi peephole 1 loaded constant into (hl) through a
+ ld	a, #%1
+ ld	(hl+), a
+} if notUsed('a')
+
+replace {
+ ld	(hl), #%1
+ dec	hl
+} by {
+ ; lddi peephole 2 loaded constant into (hl) through a
+ ld	a, #%1
+ ld	(hl-), a
+} if notUsed('a')
+
+replace {
+ ldhl	sp,	#%2
+ ld	a, (hl)
+ ld	(%1),a
+ ldhl	sp,	#%3
+} by {
+ ; lddi peephole 3 increment hl instead of lda
+ ldhl	sp,	#%2
+ ld	a, (hl+)
+ ld	(%1),a
+} if operandsLiteral(%2 %3), notSame(%1 'hl'), immdInRange(1 1 '-' %3 %2 %4)
+
