@@ -100,7 +100,7 @@ replace {
  ldhl	sp,	#%7
  ld	c, (hl)
  push	bc
-} if notUsed('bc'), immdInRange(-128 127 '-' %2 1 %7)
+} if operandsLiteral(%2), notUsed('bc'), immdInRange(-128 127 '-' %2 1 %7)
 
 
 replace {

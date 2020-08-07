@@ -10,5 +10,5 @@ replace {
  ; jump peephole 1 simplified cp %3 sub %4 to sub %3 dec
  dec	a
  jr	Z, %2
-} if immdInRange(1 1 '-' %4 %3 %5), notUsedFrom(%1 'a')
+} if operandsLiteral(%3 %4), immdInRange(1 1 '-' %4 %3 %5), notUsedFrom(%1 'a')
 

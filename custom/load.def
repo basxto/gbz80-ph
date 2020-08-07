@@ -18,7 +18,7 @@ replace{
  xor	a, a
  ld	(%1), a
  inc	a
-} if immdInRange(1 1 '|' %2 0 %3)
+} if operandsLiteral(%2), immdInRange(1 1 '|' %2 0 %3)
 
 // for TMA_REG, TIMA_REG etc
 replace {
@@ -30,7 +30,7 @@ replace {
  ld	%6, #%2
  ld	(%5%6), #%1
  inc	%6
-} if immdInRange(1 1 '-' %3 %2 %4)
+} if operandsLiteral(%2 %3), immdInRange(1 1 '-' %3 %2 %4)
 
 replace {
  ld	%6, #%2
@@ -41,7 +41,7 @@ replace {
  ld	%6, #%2
  ld	(%5%6), #%1
  dec	%6
-} if immdInRange(1 1 '-' %2 %3 %4)
+} if operandsLiteral(%2 %3), immdInRange(1 1 '-' %2 %3 %4)
 
 //x++ == 0
 replace {
