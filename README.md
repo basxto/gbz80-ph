@@ -1,3 +1,8 @@
+# Deprecated
+
+The rules went either into SDCC or SDCC already had similar rules which got generalized for gbz80 by now.
+16bitarithmetic.def has to be done in gen.c anyways.
+
 ## This needs SVN version / snapshot of SDCC
 
 Rules depend on peep hole functions, which **aren't** implemented in version **4.0.0**, and therefore will lead to errors in that version.
